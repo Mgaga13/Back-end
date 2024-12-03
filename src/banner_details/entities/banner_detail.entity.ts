@@ -4,7 +4,7 @@ import { ProductEntity } from 'src/products/entities/product.entity';
 import { Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity('banner_detail')
-export class BannerDetail extends BaseEntity {
+export class BannerDetailEntity extends BaseEntity {
   @ManyToOne(() => ProductEntity, (product) => product.id, {
     onDelete: 'CASCADE',
   })

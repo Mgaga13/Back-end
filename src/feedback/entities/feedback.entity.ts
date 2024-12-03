@@ -5,7 +5,7 @@ import { Check, Column, Entity, ManyToOne } from 'typeorm';
 
 @Check(`"star" >= 1 AND "star" <= 5`)
 @Entity('feedbacks')
-export class Feedback extends BaseEntity {
+export class FeedbackEntity extends BaseEntity {
   @ManyToOne(() => ProductEntity, (product) => product.id, {
     onDelete: 'CASCADE',
   })

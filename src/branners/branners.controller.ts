@@ -1,9 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { BrannersService } from './branners.service';
 import { CreateBrannerDto } from './dto/create-branner.dto';
 import { UpdateBrannerDto } from './dto/update-branner.dto';
 
-@Controller('branners')
+@Controller('v1/branners')
 export class BrannersController {
   constructor(private readonly brannersService: BrannersService) {}
 
@@ -19,16 +27,16 @@ export class BrannersController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.brannersService.findOne(+id);
+    return this.brannersService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBrannerDto: UpdateBrannerDto) {
-    return this.brannersService.update(+id, updateBrannerDto);
+    return this.brannersService.update(id, updateBrannerDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.brannersService.remove(+id);
+    return this.brannersService.remove(id);
   }
 }

@@ -5,5 +5,6 @@ import { BrannersController } from './branners.controller';
 @Module({
   controllers: [BrannersController],
   providers: [BrannersService],
+  exports: [BrannersModule],
 })
 export class BrannersModule {}

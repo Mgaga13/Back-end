@@ -4,7 +4,7 @@ import { ProductEntity } from 'src/products/entities/product.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity('order_details')
-export class OrderDetail extends BaseEntity {
+export class OrderDetailEntity extends BaseEntity {
   @ManyToOne(() => OrderEntity, (order) => order.id, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: OrderEntity;

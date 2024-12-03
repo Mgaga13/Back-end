@@ -1,26 +1,46 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBrannerDto } from './dto/create-branner.dto';
 import { UpdateBrannerDto } from './dto/update-branner.dto';
+import { BrannerEntity } from './entities/branner.entity';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class BrannersService {
-  create(createBrannerDto: CreateBrannerDto) {
-    return 'This action adds a new branner';
+  private bannerRepository: Repository<BrannerEntity>;
+  constructor(private datasource: DataSource) {
+    this.bannerRepository = this.datasource.getRepository(BrannerEntity);
+  }
+  async create(createCategoryDto: CreateBrannerDto) {
+    return await this.bannerRepository.save(createCategoryDto);
   }
 
-  findAll() {
-    return `This action returns all branners`;
+  async findAll() {
+    return await this.bannerRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} branner`;
+  async findOne(id: string) {
+    const category = await this.bannerRepository.findOne({
+      where: { id: id },
+    });
+    if (!category) {
+      throw new Error(`Category with ID ${id} not found`);
+    }
+    return category;
   }
 
-  update(id: number, updateBrannerDto: UpdateBrannerDto) {
-    return `This action updates a #${id} branner`;
+  async update(id: string, updateCategoryDto: UpdateBrannerDto) {
+    const category = await this.findOne(id);
+    return this.bannerRepository.save({
+      ...category,
+      ...updateCategoryDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} branner`;
+  async remove(id: string) {
+    const category = await this.findOne(id);
+    return this.bannerRepository.save({
+      ...category,
+      isDeleted: true,
+    });
   }
 }

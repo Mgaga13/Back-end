@@ -16,6 +16,8 @@ import { Public } from 'src/auth/decorators/auth.decorator';
 import { Roles } from 'src/auth/decorators/roler.decorator';
 import { UserRole } from 'src/commom/utils/constants';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { pick } from 'src/commom/utils/helper';
+import { PageProductDto } from './dto/page-product.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('v1/users')
@@ -30,8 +32,10 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   @UseGuards(RolesGuard)
   // @Public()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(pageOptionsDto: PageProductDto) {
+    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    options.limit = options.limit > 100 ? 100 : options.limit;
+    return this.usersService.findAll(options);
   }
   // @Get(':id')
   // findOne(@Param('id') id: string) {

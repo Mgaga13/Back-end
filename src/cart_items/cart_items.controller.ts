@@ -1,34 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { CartItemsService } from './cart_items.service';
 import { CreateCartItemDto } from './dto/create-cart_item.dto';
 import { UpdateCartItemDto } from './dto/update-cart_item.dto';
+import { CartItemEntity } from './entities/cart_item.entity';
 
-@Controller('cart-items')
+@Controller('v1/cart-items')
 export class CartItemsController {
   constructor(private readonly cartItemsService: CartItemsService) {}
 
   @Post()
-  create(@Body() createCartItemDto: CreateCartItemDto) {
-    return this.cartItemsService.create(createCartItemDto);
+  async createCartItem(
+    @Body() createCartItemDto: CreateCartItemDto,
+  ): Promise<CartItemEntity> {
+    return this.cartItemsService.createCartItem(createCartItemDto);
   }
 
-  @Get()
-  findAll() {
-    return this.cartItemsService.findAll();
+  @Get(':cartId')
+  async getCartItems(
+    @Param('cartId') cartId: string,
+  ): Promise<CartItemEntity[]> {
+    return this.cartItemsService.getCartItems(cartId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cartItemsService.findOne(+id);
+  @Patch(':cartItemId')
+  async updateCartItemQuantity(
+    @Param('cartItemId') cartItemId: string,
+    @Body('quantity') quantity: number,
+  ): Promise<CartItemEntity> {
+    return this.cartItemsService.updateCartItemQuantity(cartItemId, quantity);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCartItemDto: UpdateCartItemDto) {
-    return this.cartItemsService.update(+id, updateCartItemDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cartItemsService.remove(+id);
+  @Delete(':cartItemId')
+  async deleteCartItem(@Param('cartItemId') cartItemId: string): Promise<void> {
+    await this.cartItemsService.deleteCartItem(cartItemId);
   }
 }

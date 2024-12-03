@@ -1,9 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { BannerDetailsService } from './banner_details.service';
 import { CreateBannerDetailDto } from './dto/create-banner_detail.dto';
 import { UpdateBannerDetailDto } from './dto/update-banner_detail.dto';
 
-@Controller('banner-details')
+@Controller('v1/banner-details')
 export class BannerDetailsController {
   constructor(private readonly bannerDetailsService: BannerDetailsService) {}
 
@@ -19,12 +27,15 @@ export class BannerDetailsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.bannerDetailsService.findOne(+id);
+    return this.bannerDetailsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBannerDetailDto: UpdateBannerDetailDto) {
-    return this.bannerDetailsService.update(+id, updateBannerDetailDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateBannerDetailDto: UpdateBannerDetailDto,
+  ) {
+    return this.bannerDetailsService.update(id, updateBannerDetailDto);
   }
 
   @Delete(':id')
