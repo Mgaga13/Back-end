@@ -3,7 +3,7 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 
-@Global() // makes the module available globally for other modules once imported in the app modules
+@Global()
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -15,15 +15,15 @@ import * as Joi from 'joi';
         DB_USER: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
         DB_NAME: Joi.string().required(),
+        PORT: Joi.number().default(3337),
       }),
     }),
   ],
   providers: [
     {
-      provide: DataSource, // add the datasource as a provider
+      provide: DataSource,
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        // using the factory function to create the datasource instance
         try {
           const dataSource = new DataSource({
             type: 'postgres',
@@ -33,13 +33,13 @@ import * as Joi from 'joi';
             password: configService.get<string>('DB_PASSWORD'),
             database: configService.get<string>('DB_NAME'),
             synchronize: true,
-            entities: [`${__dirname}/../**/**.entity{.ts,.js}`], // this will automatically load all entity file in the src folder
+            entities: [`${__dirname}/../**/*.entity{.ts,.js}`],
           });
-          await dataSource.initialize(); // initialize the data source
+          await dataSource.initialize();
           console.log('Database connected successfully');
           return dataSource;
         } catch (error) {
-          console.log('Error connecting to database');
+          console.error('Error connecting to the database:', error);
           throw error;
         }
       },

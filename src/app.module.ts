@@ -15,16 +15,12 @@ import { CartsModule } from './carts/carts.module';
 import { CartItemsModule } from './cart_items/cart_items.module';
 import { OrdersModule } from './orders/orders.module';
 import { OrderDetailsModule } from './order-details/order-details.module';
-import { AuthGuard, PassportModule } from '@nestjs/passport';
-import { SnakeNamingStrategy } from './commom/strategy/snake-naming.strategy';
-import { ExceptionsLoggerFilter } from './commom/utils/exceptionLogger.filter';
-import { UserEntity } from './users/entities/user.entity';
 import { TypeOrmModule } from './datasource/typeorm.module';
 import { AuthModule } from './auth/auth.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { BrannersModule } from './branners/branners.module';
 import { BannerDetailsModule } from './banner_details/banner_details.module';
-import { UsersService } from './users/users.service';
+import { ExceptionsLoggerFilter } from './commom/utils/exceptionLogger.filter';
 dotenv.config();
 
 @Module({
@@ -57,10 +53,10 @@ dotenv.config();
   controllers: [AppController],
   providers: [
     AppService,
-    // {
-    //   provide: APP_FILTER,
-    //   useClass: ExceptionsLoggerFilter,
-    // },
+    {
+      provide: APP_FILTER,
+      useClass: ExceptionsLoggerFilter,
+    },
   ],
 })
 export class AppModule {}

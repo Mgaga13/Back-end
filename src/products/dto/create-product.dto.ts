@@ -34,10 +34,10 @@ export class CreateProductDto {
   quantity: number;
 
   @IsOptional()
-  @IsNumber()
-  brand_id?: number;
+  @IsString()
+  brand_id?: string;
 
   @IsOptional()
-  @IsNumber()
-  category_id?: number;
+  @IsString()
+  category_id?: string;
 }

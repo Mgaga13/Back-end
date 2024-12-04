@@ -10,7 +10,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
-import { PageProductDto } from './dto/page-product.dto';
+import { PageUserDto } from './dto/page-user.dto';
 import { PageMetaDto } from 'src/commom/dto/pageMeta.dto';
 import { PageDto } from 'src/commom/dto/page.dto';
 
@@ -28,39 +28,24 @@ export class UsersService {
     }
     return await this.userRepository.save(createUserDto);
   }
-  async findAll(options: PageProductDto): Promise<any> {
+  async findAll(options: PageUserDto): Promise<any> {
     const skip = (options.page - 1) * options.limit;
     const queryBuilder = this.userRepository.createQueryBuilder('users');
 
     queryBuilder
       .where('users.isDeleted = :isDeleted', { isDeleted: false })
-      // .andWhere(
-      //   'users.name ILIKE :q OR plants.commonName ILIKE :q OR plants.botanicalName ILIKE :q',
-      //   { q: `%${filter.q}%` },
-      // )
       .select([
         'users.id',
         'users.name',
-        'users.commonName',
-        'users.botanicalName',
-        'users.plantType',
-        'users.thumbnail',
-        'users.images',
+        'users.email',
+        'users.role',
+        'users.avatar',
+        'users.phone',
       ])
       .orderBy(`users.${options.sort}`, options.order)
       .skip(skip)
-      .take(options.limit);
-
-    // if (Object.keys(filter).length !== 0) {
-    //   Object.keys(filter).forEach((key: string) => {
-    //     if (!['q', 'limit', 'page', 'order', 'sort'].includes(key)) {
-    //       queryBuilder.andWhere(`users.${key} ILIKE :${key}`, {
-    //         [key]: `%${filter[key]}%`,
-    //       });
-    //     }
-    //   });
-    // }
-
+      .take(options.limit)
+      .getMany();
     const itemCount: number = await queryBuilder.getCount();
 
     const { entities } = await queryBuilder
@@ -92,6 +77,22 @@ export class UsersService {
     });
   }
 
+  async findOneByName(name: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        name: name,
+      },
+    });
+    if (user) {
+      throw new HttpException(
+        'Not find name in list User',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    delete user.password;
+    return user;
+  }
+
   findOneByEmailAndRefeshToken(
     email: string,
     refresh_token: string,
@@ -108,9 +109,9 @@ export class UsersService {
     }
     return await this.userRepository.update(id, updateUserDto);
   }
+
   async updateRefreshToken(email: string, refresh_token: string) {
     const user = await this.findOneByEmail(email);
-    console.log(user);
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
@@ -118,7 +119,7 @@ export class UsersService {
       refreshToken: refresh_token,
     });
   }
-  remove(id: number) {
+  remove(id: string) {
     return this.userRepository.update(id, { isDeleted: true });
   }
 }

@@ -12,7 +12,7 @@ import { UsersService } from 'src/users/users.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import * as bcrypt from 'bcrypt';
+const bcrypt = require('bcryptjs');
 import { AccessToken } from 'src/commom/type/AccessToken';
 
 @Injectable()
@@ -80,7 +80,8 @@ export class AuthService {
   }
 
   private async hashPasswordUser(password: string) {
-    return await bcrypt.hash(password, this.SALT_ROUND);
+    const salt = bcrypt.genSaltSync(this.SALT_ROUND);
+    return await bcrypt.hash(password, salt);
   }
   private async verifyPlainContentWithHashedContent(
     plain_text: string,

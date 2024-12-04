@@ -6,10 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { PageProductDto } from './dto/page-product.dto';
+import { pick } from 'src/commom/utils/helper';
 
 @Controller('v1/products')
 export class ProductsController {
@@ -21,8 +24,10 @@ export class ProductsController {
   }
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query() pageOptionsDto: PageProductDto) {
+    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    options.limit = options.limit > 100 ? 100 : options.limit;
+    return this.productsService.findAllProducts(options);
   }
 
   @Get(':id')
