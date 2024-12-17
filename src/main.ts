@@ -16,7 +16,7 @@ async function bootstrap() {
       'https://www.example.com',
       'https://app.example.com',
     ],
-    methods: ['GET', 'POST', 'DELETE', 'PUT'],
+    methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH'],
     credentials: true,
   });
   const configService = app.get(ConfigService);

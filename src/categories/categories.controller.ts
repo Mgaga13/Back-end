@@ -26,7 +26,7 @@ export class CategoriesController {
   @UseGuards(RolesGuard)
   @Post()
   create(@Body() createCategoryDto: CreateCategoryDto) {
-    console.log(createCategoryDto);
+    // console.log(createCategoryDto);
     return this.categoriesService.create(createCategoryDto);
   }
 

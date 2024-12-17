@@ -51,7 +51,13 @@ export class UsersController {
   @UseGuards(RolesGuard)
   // @Public()
   findAll(@Query() pageOptionsDto: PageUserDto) {
-    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    const options = pick(pageOptionsDto, [
+      'page',
+      'limit',
+      'sort',
+      'order',
+      'searchText',
+    ]);
     options.limit = options.limit > 100 ? 100 : options.limit;
     return this.usersService.findAll(options);
   }
@@ -61,9 +67,19 @@ export class UsersController {
     return this.usersService.findOneByName(name);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @Public()
+  @UseInterceptors(FileInterceptor('avatar'))
+  @Post('/update')
+  async update(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const uploadResults = await this.cloudinaryService.uploadToCloudinary(
+      'products',
+      file,
+    );
+    updateUserDto.avatar = uploadResults.url;
+    return this.usersService.update(updateUserDto);
   }
 
   @Delete(':id')

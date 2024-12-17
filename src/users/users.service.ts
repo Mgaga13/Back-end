@@ -41,7 +41,14 @@ export class UsersService {
         'users.role',
         'users.avatar',
         'users.phone',
-      ])
+      ]);
+    console.log(options);
+    if (options.searchText) {
+      queryBuilder.andWhere('users.email LIKE :searchText', {
+        searchText: `%${options.searchText}%`, // Adding % for LIKE pattern matching
+      });
+    }
+    queryBuilder
       .orderBy(`users.${options.sort}`, options.order)
       .skip(skip)
       .take(options.limit)
@@ -102,12 +109,12 @@ export class UsersService {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.findOneById(id);
+  async update(updateUserDto: UpdateUserDto) {
+    const user = await this.findOneById(updateUserDto.id);
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-    return await this.userRepository.update(id, updateUserDto);
+    return await this.userRepository.update(updateUserDto.id, updateUserDto);
   }
 
   async updateRefreshToken(email: string, refresh_token: string) {

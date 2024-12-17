@@ -34,7 +34,7 @@ export class CloudinaryService {
 
     // Tạo stream từ buffer đã resize
     const stream = Readable.from(resizedImage);
-    console.log(file.originalname);
+    // console.log(file.originalname);
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
