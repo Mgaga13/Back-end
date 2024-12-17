@@ -21,6 +21,9 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { BrannersModule } from './branners/branners.module';
 import { BannerDetailsModule } from './banner_details/banner_details.module';
 import { ExceptionsLoggerFilter } from './commom/utils/exceptionLogger.filter';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { PaymentModule } from './payment/payment.module';
+import { ReportModule } from './report/report.module';
 dotenv.config();
 
 @Module({
@@ -49,6 +52,9 @@ dotenv.config();
     CartItemsModule,
     OrdersModule,
     OrderDetailsModule,
+    CloudinaryModule,
+    PaymentModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [

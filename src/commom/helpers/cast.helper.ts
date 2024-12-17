@@ -19,7 +19,10 @@ export function toBoolean(value: string): boolean {
   return value === 'true' || value === '1' ? true : false;
 }
 
-export function toNumber(value: string, opts: toNumberOptions = {}): number {
+export function toNumberPagination(
+  value: string,
+  opts: toNumberOptions = {},
+): number {
   let newValue = Number.parseInt(value || String(opts.default), 10);
   if (Number.isNaN(newValue)) {
     newValue = opts.default;
@@ -34,4 +37,8 @@ export function toNumber(value: string, opts: toNumberOptions = {}): number {
   }
   console.log('newValue====>', newValue);
   return newValue;
+}
+
+export function toNumberDto(value: string) {
+  return Number(value);
 }

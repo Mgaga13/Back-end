@@ -15,7 +15,7 @@ export class ProductEntity extends BaseEntity {
   oldprice: number;
 
   @Column({ type: 'simple-array' })
-  image: string;
+  image: string[];
 
   @Column()
   description: string;

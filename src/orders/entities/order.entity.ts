@@ -11,9 +11,6 @@ export class OrderEntity extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @Column({ nullable: true })
-  session_id: string;
-
   @Column()
   status: number;
 

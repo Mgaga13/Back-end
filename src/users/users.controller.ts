@@ -8,6 +8,8 @@ import {
   Delete,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -19,13 +21,28 @@ import { UserRole } from 'src/commom/utils/constants';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { pick } from 'src/commom/utils/helper';
 import { PageUserDto } from './dto/page-user.dto';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('v1/users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
+
+  @UseInterceptors(FileInterceptor('avatar'))
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+  async create(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createUserDto: CreateUserDto,
+  ) {
+    const uploadResults = await this.cloudinaryService.uploadToCloudinary(
+      'products',
+      file,
+    );
+    createUserDto.avatar = uploadResults.url;
     return this.usersService.create(createUserDto);
   }
 

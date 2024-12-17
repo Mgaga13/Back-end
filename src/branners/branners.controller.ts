@@ -11,7 +11,7 @@ import { BrannersService } from './branners.service';
 import { CreateBrannerDto } from './dto/create-branner.dto';
 import { UpdateBrannerDto } from './dto/update-branner.dto';
 
-@Controller('v1/branners')
+@Controller('v1/banner')
 export class BrannersController {
   constructor(private readonly brannersService: BrannersService) {}
 

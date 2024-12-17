@@ -33,8 +33,8 @@ export class AuthService {
       throw new BadRequestException('Wrong credentials!!');
     }
   }
-  async signIn({ id, email }): Promise<AccessToken | any> {
-    const payload = { id: id, email: email };
+  async signIn({ id, email, role }): Promise<AccessToken | any> {
+    const payload = { id: id, email: email, role: role };
     return await this.generateToken(payload);
   }
 
@@ -58,7 +58,13 @@ export class AuthService {
     });
     await this.userService.updateRefreshToken(payload.email, refresh_token);
 
-    return { access_token, refresh_token };
+    return {
+      data: {
+        access_token,
+        refresh_token,
+      },
+      success: true,
+    };
   }
 
   async getUserIfRefreshTokenMatched(

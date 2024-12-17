@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { OrderDetailEntity } from 'src/order-details/entities/order-detail.entity';
 import { CartEntity } from 'src/carts/entities/cart.entity';
 import { CartItemEntity } from 'src/cart_items/entities/cart_item.entity';
+import { PageOptionsReciptDto } from './dto/PageOptionsReciptDto.dto';
 
 @Injectable()
 export class OrdersService {
@@ -107,5 +108,25 @@ export class OrdersService {
     await this.cartRepository.delete(cart.id);
 
     return savedOrder;
+  }
+
+  async getTotalOrder(options: PageOptionsReciptDto): Promise<any> {
+    const queryBuilder = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.user', 'users')
+      .select('SUM(order.price) as Price')
+      .where('order.isDeleted = :isDeleted', { isDeleted: false });
+    if (options.startDate) {
+      queryBuilder.andWhere('order.createdAt >= :startDate', {
+        startDate: options.startDate,
+      });
+    }
+    if (options.endDate) {
+      queryBuilder.andWhere('order.createdAt < :endDate', {
+        endDate: options.endDate,
+      });
+    }
+    const result = await queryBuilder.getRawMany();
+    return result;
   }
 }

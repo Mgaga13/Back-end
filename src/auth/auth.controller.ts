@@ -40,9 +40,9 @@ export class AuthController {
     };
   }
 
-  @UseGuards(LocalAuthGuard)
-  @Post('logout')
-  async logout(@Request() req) {
-    return req.logout();
-  }
+  // @UseGuards(LocalAuthGuard)
+  // @Post('logout')
+  // async logout(@Request() req) {
+  //   return req.logout();
+  // }
 }

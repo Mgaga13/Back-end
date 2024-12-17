@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsArray,
+  isArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { toNumberDto } from 'src/commom/helpers/cast.helper';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -7,15 +16,21 @@ export class CreateProductDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @Transform(({ value }) => {
+    return toNumberDto(value);
+  })
   price: number;
 
   @IsOptional()
   @IsNumber()
+  @Transform(({ value }) => {
+    return toNumberDto(value);
+  })
   oldprice?: number;
 
   @IsNotEmpty()
   @IsString()
-  image: string;
+  image: any;
 
   @IsNotEmpty()
   @IsString()
@@ -27,10 +42,16 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsNumber()
+  @Transform(({ value }) => {
+    return toNumberDto(value);
+  })
   buyturn?: number;
 
   @IsNotEmpty()
   @IsNumber()
+  @Transform(({ value }) => {
+    return toNumberDto(value);
+  })
   quantity: number;
 
   @IsOptional()

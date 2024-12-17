@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductEntity } from './entities/product.entity';
 import { CategoriesModule } from 'src/categories/categories.module';
 import { BrandsModule } from 'src/brands/brands.module';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ProductEntity])],
+  imports: [TypeOrmModule.forFeature([ProductEntity]), CloudinaryModule],
   controllers: [ProductsController],
   providers: [ProductsService],
   exports: [ProductsService],

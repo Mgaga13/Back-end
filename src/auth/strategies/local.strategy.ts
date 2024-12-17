@@ -9,7 +9,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super({ usernameField: 'email' }); // Mặc định là username, đổi sang email
   }
   public async validate(email: string, password: string) {
-    const user = this.auth_service.validateUser(email, password);
+    const user = await this.auth_service.validateUser(email, password);
     if (!user) {
       throw new UnauthorizedException();
     }

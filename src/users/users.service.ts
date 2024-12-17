@@ -119,7 +119,8 @@ export class UsersService {
       refreshToken: refresh_token,
     });
   }
-  remove(id: string) {
+  async remove(id: string) {
+    const user = await this.findOneById(id);
     return this.userRepository.update(id, { isDeleted: true });
   }
 }

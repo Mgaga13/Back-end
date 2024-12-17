@@ -24,7 +24,7 @@ export class ProductsService {
 
   // Create a new product
   async create(createProductDto: CreateProductDto): Promise<any> {
-    const existsProduct = this.findOneByName(createProductDto.name);
+    const existsProduct = await this.findOneByName(createProductDto.name);
     if (existsProduct) {
       throw new HttpException(
         `${createProductDto.name} has created`,
