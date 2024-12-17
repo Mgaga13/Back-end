@@ -24,6 +24,7 @@ import { ExceptionsLoggerFilter } from './commom/utils/exceptionLogger.filter';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PaymentModule } from './payment/payment.module';
 import { ReportModule } from './report/report.module';
+import { TypeProductModule } from './type-product/type-product.module';
 dotenv.config();
 
 @Module({
@@ -55,6 +56,7 @@ dotenv.config();
     CloudinaryModule,
     PaymentModule,
     ReportModule,
+    TypeProductModule,
   ],
   controllers: [AppController],
   providers: [

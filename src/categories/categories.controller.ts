@@ -16,6 +16,9 @@ import { Roles } from 'src/auth/decorators/roler.decorator';
 import { UserRole } from 'src/commom/utils/constants';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Public } from 'src/auth/decorators/auth.decorator';
+import { PageProductDto } from 'src/products/dto/page-product.dto';
+import { pick } from 'src/commom/utils/helper';
+import { PageOptionsDto } from 'src/commom/dto/pageOptions.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('v1/categories')
@@ -32,8 +35,10 @@ export class CategoriesController {
 
   @Get()
   @Public()
-  findAll() {
-    return this.categoriesService.findAll();
+  findAll(@Body() pageOptionsDto: PageOptionsDto) {
+    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    options.limit = options.limit > 100 ? 100 : options.limit;
+    return this.categoriesService.findAll(options);
   }
 
   @Get(':id')
@@ -43,14 +48,11 @@ export class CategoriesController {
     return this.categoriesService.findOne(id);
   }
 
-  @Patch(':id')
+  @Post('/edit')
   @Roles(UserRole.ADMIN)
   @UseGuards(RolesGuard)
-  update(
-    @Param('id') id: string,
-    @Body() updateCategoryDto: UpdateCategoryDto,
-  ) {
-    return this.categoriesService.update(id, updateCategoryDto);
+  update(@Body() updateCategoryDto: UpdateCategoryDto) {
+    return this.categoriesService.update(updateCategoryDto);
   }
 
   @Delete(':id')

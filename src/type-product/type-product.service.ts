@@ -4,37 +4,37 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
-import { CategoryEntity } from './entities/category.entity';
+import { CreateTypeProductDto } from './dto/create-type-product.dto';
+import { UpdateTypeProductDto } from './dto/update-type-product.dto';
+import { TypeEntity } from './entities/type-product.entity';
 import { DataSource, Repository } from 'typeorm';
 import { PageOptionsDto } from 'src/commom/dto/pageOptions.dto';
-import { PageDto } from 'src/commom/dto/page.dto';
 import { PageMetaDto } from 'src/commom/dto/pageMeta.dto';
+import { PageDto } from 'src/commom/dto/page.dto';
 
 @Injectable()
-export class CategoriesService {
-  private categoryRepository: Repository<CategoryEntity>;
+export class TypeProductService {
+  private typeRepository: Repository<TypeEntity>;
   constructor(private datasource: DataSource) {
-    this.categoryRepository = this.datasource.getRepository(CategoryEntity);
+    this.typeRepository = this.datasource.getRepository(TypeEntity);
   }
-  async create(createCategoryDto: CreateCategoryDto) {
+  async create(createCategoryDto: CreateTypeProductDto) {
     const categoryExists = await this.findByName(createCategoryDto.name);
     if (categoryExists) {
       throw new HttpException('name is exists', HttpStatus.CONFLICT);
     }
-    return await this.categoryRepository.save(createCategoryDto);
+    return await this.typeRepository.save(createCategoryDto);
   }
 
   async findAll(options: PageOptionsDto) {
     const skip = (options.page - 1) * options.limit;
-    const queryBuilder = this.categoryRepository.createQueryBuilder('category');
+    const queryBuilder = this.typeRepository.createQueryBuilder('type');
 
     queryBuilder
-      .where('category.isDeleted = :isDeleted', { isDeleted: false })
-      .select(['category.id', 'category.name', 'category.isDeleted']);
+      .where('type.isDeleted = :isDeleted', { isDeleted: false })
+      .select(['type.id', 'type.name', 'type.isDeleted']);
     queryBuilder
-      .orderBy(`category.${options.sort}`, options.order)
+      .orderBy(`type.${options.sort}`, options.order)
       .skip(skip)
       .take(options.limit)
       .getMany();
@@ -51,29 +51,32 @@ export class CategoriesService {
       pageOptionsDto: options,
     });
 
-    return new PageDto<CategoryEntity>(entities, pageMetaDto);
+    return new PageDto<TypeEntity>(entities, pageMetaDto);
   }
 
   async findByName(name: string) {
-    const category = await this.categoryRepository.findOne({
+    const category = await this.typeRepository.findOne({
       where: { name: name },
     });
     return category;
   }
 
   async findOne(id: string) {
-    const category = await this.categoryRepository.findOne({
+    const category = await this.typeRepository.findOne({
       where: { id: id },
     });
     if (!category) {
-      throw new HttpException('Not found category', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        `Type with ID ${id} not found`,
+        HttpStatus.NOT_FOUND,
+      );
     }
     return category;
   }
 
-  async update(updateCategoryDto: UpdateCategoryDto) {
+  async update(updateCategoryDto: UpdateTypeProductDto) {
     const category = await this.findOne(updateCategoryDto.id);
-    return this.categoryRepository.save({
+    return this.typeRepository.save({
       ...category,
       ...updateCategoryDto,
     });
@@ -81,7 +84,7 @@ export class CategoriesService {
 
   async remove(id: string) {
     const category = await this.findOne(id);
-    return this.categoryRepository.save({
+    return this.typeRepository.save({
       ...category,
       isDeleted: true,
     });

@@ -1,6 +1,7 @@
 import { BrandEntity } from 'src/brands/entities/brand.entity';
 import { CategoryEntity } from 'src/categories/entities/category.entity';
 import { BaseEntity } from 'src/commom/entities/base.entity';
+import { TypeEntity } from 'src/type-product/entities/type-product.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity('products')
@@ -42,4 +43,11 @@ export class ProductEntity extends BaseEntity {
   })
   @JoinColumn({ name: 'category_id' })
   category: CategoryEntity;
+
+  @ManyToOne(() => TypeEntity, (type) => type.id, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'type_id' })
+  typesProduct: TypeEntity;
 }

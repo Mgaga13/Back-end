@@ -35,7 +35,6 @@ export function toNumberPagination(
       newValue = opts.max;
     }
   }
-  console.log('newValue====>', newValue);
   return newValue;
 }
 

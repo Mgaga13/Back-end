@@ -5,7 +5,4 @@ import { Column, Entity } from 'typeorm';
 export class CategoryEntity extends BaseEntity {
   @Column()
   name: string;
-
-  @Column({ nullable: true })
-  image: string;
 }

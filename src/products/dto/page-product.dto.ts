@@ -24,4 +24,9 @@ export class PageProductDto {
   @Min(1)
   @Max(100)
   readonly limit?: number = 10;
+
+  @IsOptional()
+  @IsString()
+  @Type(() => String)
+  readonly searchText: string;
 }
