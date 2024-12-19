@@ -20,9 +20,11 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   avatar: string;
-  // @IsString()
-  // @IsNotEmpty()
-  // confirmPassword: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  confirmPassword: string;
 
   @IsOptional()
   @IsString()

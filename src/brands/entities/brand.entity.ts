@@ -6,6 +6,6 @@ export class BrandEntity extends BaseEntity {
   @Column()
   name: string;
 
-  @Column()
-  image: string;
+  // @Column()
+  // image: string;
 }

@@ -28,6 +28,7 @@ export class CreateProductDto {
   })
   oldprice?: number;
 
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   image: any;
@@ -37,8 +38,7 @@ export class CreateProductDto {
   description: string;
 
   @IsNotEmpty()
-  @IsString()
-  specification: string;
+  specification: Record<string, any>;
 
   @IsOptional()
   @IsNumber()

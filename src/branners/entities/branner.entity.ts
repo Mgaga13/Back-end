@@ -4,11 +4,11 @@ import { Column, Entity } from 'typeorm';
 @Entity('banner')
 export class BrannerEntity extends BaseEntity {
   @Column()
-  name: string;
+  title: string;
 
   @Column({ type: 'text', nullable: true })
   image: string;
 
-  @Column()
-  status: number;
+  @Column({ type: 'text', nullable: true })
+  content: string;
 }

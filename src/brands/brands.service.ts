@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -9,6 +10,9 @@ import { UpdateBrandDto } from './dto/update-brand.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BrandEntity } from './entities/brand.entity';
 import { Repository } from 'typeorm';
+import { PageMetaDto } from 'src/commom/dto/pageMeta.dto';
+import { PageDto } from 'src/commom/dto/page.dto';
+import { PageOptionsDto } from 'src/commom/dto/pageOptions.dto';
 
 @Injectable()
 export class BrandsService {
@@ -23,8 +27,32 @@ export class BrandsService {
     return await this.brandRepository.save(brand);
   }
 
-  async findAll(): Promise<BrandEntity[]> {
-    return await this.brandRepository.find();
+  async findAll(options: PageOptionsDto) {
+    const skip = (options.page - 1) * options.limit;
+    const queryBuilder = this.brandRepository.createQueryBuilder('brand');
+
+    queryBuilder
+      .where('brand.isDeleted = :isDeleted', { isDeleted: false })
+      .select(['brand.id', 'brand.name', 'brand.isDeleted']);
+    queryBuilder
+      .orderBy(`brand.${options.sort}`, options.order)
+      .skip(skip)
+      .take(options.limit)
+      .getMany();
+    const itemCount: number = await queryBuilder.getCount();
+
+    const { entities } = await queryBuilder
+      .getRawAndEntities()
+      .catch((error: any) => {
+        throw new BadRequestException(error);
+      });
+
+    const pageMetaDto: PageMetaDto = new PageMetaDto({
+      itemCount,
+      pageOptionsDto: options,
+    });
+
+    return new PageDto<BrandEntity>(entities, pageMetaDto);
   }
   async findByName(name: string) {
     const verifyExistsName = await this.brandRepository.findOne({

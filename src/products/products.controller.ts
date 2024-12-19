@@ -23,7 +23,7 @@ import {
 } from '@nestjs/platform-express';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
-@Controller('v1/products')
+@Controller('v1/product')
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
@@ -41,6 +41,7 @@ export class ProductsController {
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() createProductDto: CreateProductDto,
   ) {
+    console.log(files);
     const uploadResults = await this.cloudinaryService.uploadMultipleFiles(
       'products',
       files,
@@ -50,10 +51,16 @@ export class ProductsController {
     return this.productsService.create(createProductDto);
   }
 
-  @Post('/list')
+  @Get('/list')
   @HttpCode(200)
-  findAll(@Body() pageOptionsDto: PageProductDto) {
-    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+  findAll(@Query() pageOptionsDto: PageProductDto) {
+    const options = pick(pageOptionsDto, [
+      'page',
+      'limit',
+      'sort',
+      'order',
+      'searchText',
+    ]);
     options.limit = options.limit > 100 ? 100 : options.limit;
     return this.productsService.findAllProducts(options);
   }
@@ -63,9 +70,19 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(id, updateProductDto);
+  @Post('/update')
+  @UseInterceptors(FilesInterceptor('files', 10))
+  async update(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() updateProductDto: UpdateProductDto,
+  ) {
+    const uploadResults = await this.cloudinaryService.uploadMultipleFiles(
+      'products',
+      files,
+    );
+    const image = uploadResults.map((val) => val.url);
+    updateProductDto.image = image;
+    return this.productsService.update(updateProductDto);
   }
 
   @Delete(':id')

@@ -1,7 +1,6 @@
 import { BrandEntity } from 'src/brands/entities/brand.entity';
 import { CategoryEntity } from 'src/categories/entities/category.entity';
 import { BaseEntity } from 'src/commom/entities/base.entity';
-import { TypeEntity } from 'src/type-product/entities/type-product.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity('products')
@@ -12,7 +11,7 @@ export class ProductEntity extends BaseEntity {
   @Column()
   price: number;
 
-  @Column()
+  @Column({ default: 0 })
   oldprice: number;
 
   @Column({ type: 'simple-array' })
@@ -21,8 +20,8 @@ export class ProductEntity extends BaseEntity {
   @Column()
   description: string;
 
-  @Column()
-  specification: string;
+  @Column({ type: 'jsonb', nullable: true })
+  specification: Record<string, any>;
 
   @Column({ default: 0 })
   buyturn: number; // Sản phẩm nào mua nhiều
@@ -43,11 +42,4 @@ export class ProductEntity extends BaseEntity {
   })
   @JoinColumn({ name: 'category_id' })
   category: CategoryEntity;
-
-  @ManyToOne(() => TypeEntity, (type) => type.id, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'type_id' })
-  typesProduct: TypeEntity;
 }
