@@ -1,17 +1,18 @@
 import { BrandEntity } from 'src/brands/entities/brand.entity';
 import { CategoryEntity } from 'src/categories/entities/category.entity';
 import { BaseEntity } from 'src/commom/entities/base.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { FeedbackEntity } from 'src/feedback/entities/feedback.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity('products')
 export class ProductEntity extends BaseEntity {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   price: number;
 
-  @Column({ default: 0 })
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   oldprice: number;
 
   @Column({ type: 'simple-array' })
@@ -42,4 +43,9 @@ export class ProductEntity extends BaseEntity {
   })
   @JoinColumn({ name: 'category_id' })
   category: CategoryEntity;
+
+  @OneToMany(() => FeedbackEntity, (feedback) => feedback.product, {
+    cascade: true,
+  })
+  feedbacks: FeedbackEntity[];
 }

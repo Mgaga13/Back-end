@@ -1,10 +1,17 @@
-import { isNotEmpty, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsArray,
+  isNotEmpty,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreatePaymentDto {
-  @IsString()
+  @IsNumber()
+  amount: number;
+
+  @IsArray()
   @IsNotEmpty()
-  price: string;
-  @IsString()
-  @IsNotEmpty()
-  order_id: string;
+  cartItem: any;
 }

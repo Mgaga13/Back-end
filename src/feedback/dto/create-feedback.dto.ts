@@ -4,9 +4,16 @@ export class CreateFeedbackDto {
   @IsInt()
   @Min(1)
   @Max(5)
-  star: number = 5; // Giá trị mặc định là 5
+  star: number;
 
   @IsString()
   @IsOptional()
-  content?: string = 'No feedback provided'; // Nội dung mặc định
+  content?: string;
+
+  @IsString()
+  productId: string;
+
+  @IsInt()
+  @IsOptional()
+  userId?: string;
 }

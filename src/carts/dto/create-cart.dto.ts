@@ -11,11 +11,11 @@ export class CreateCartDto {
   @IsNotEmpty()
   productId: string;
 
-  @IsNumber()
-  @IsNotEmpty()
-  quantity: number;
+  // @IsNumber()
+  // @IsNotEmpty()
+  // quantity: number;
 
-  @IsString()
-  @IsOptional()
-  user_id?: string;
+  // @IsString()
+  // @IsOptional()
+  // userId?: string;
 }

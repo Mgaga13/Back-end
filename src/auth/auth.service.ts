@@ -14,7 +14,9 @@ import { RegisterUserDto } from './dto/register-user.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 const bcrypt = require('bcryptjs');
 import { AccessToken } from 'src/commom/type/AccessToken';
-
+import { MailService } from 'src/commom/services/mail.service';
+import { nanoid } from 'nanoid';
+import { ChangePassword } from './dto/change-pass.dto';
 @Injectable()
 export class AuthService {
   private SALT_ROUND = 11;
@@ -22,6 +24,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userService: UsersService,
+    private mailService: MailService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -97,5 +100,45 @@ export class AuthService {
     if (!is_matching) {
       throw new BadRequestException();
     }
+  }
+
+  public async forgotPassword(email: string) {
+    const user = await this.userService.findOneByEmail(email);
+    if (user) {
+      //If user exists, generate password reset link
+      const tokenCreatedAt = new Date();
+      tokenCreatedAt.setHours(tokenCreatedAt.getHours() + 1);
+
+      const resetToken = nanoid(64);
+      await this.userService.resetTokenSendEmail({
+        user: user,
+        resetPasswordToken: resetToken,
+        tokenCreatedAt,
+      });
+      //Send the link to the user by email
+      this.mailService.sendPasswordResetEmail(email, resetToken, user.id);
+      return {
+        success: true,
+        message: 'Email sent',
+      };
+    } else {
+      throw new BadRequestException('Email is not exits');
+    }
+  }
+
+  async resetPassword(newPassword: string, token: string) {
+    const user = await this.userService.findOneByToken(token, newPassword);
+    delete user.password;
+    delete user.balance;
+    return user;
+  }
+  async changePassword(dtoChange: ChangePassword) {
+    const user = await this.userService.findUserById(dtoChange.id);
+    await this.verifyPlainContentWithHashedContent(
+      dtoChange.currentPassword,
+      user.password,
+    );
+    const hashed_password = await this.hashPasswordUser(dtoChange.newPassword);
+    return this.userService.updatePassword(dtoChange.id, hashed_password);
   }
 }

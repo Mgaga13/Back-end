@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 import { DataSource, Repository } from 'typeorm';
@@ -14,7 +14,13 @@ export class FeedbackService {
 
   async create(createFeedbackDto: CreateFeedbackDto) {
     try {
-      return await this.feedbackRepository.save(createFeedbackDto);
+      const feedback = this.feedbackRepository.create({
+        ...createFeedbackDto,
+        product: { id: createFeedbackDto.productId },
+        user: { id: createFeedbackDto.userId },
+      });
+
+      return await this.feedbackRepository.save(feedback);
     } catch (error) {
       console.error('Error creating feedback:', error.message);
       // Fallback giá trị mặc định
@@ -86,5 +92,18 @@ export class FeedbackService {
       console.error(`Error removing feedback with ID ${id}:`, error.message);
       return { star: 5, content: 'Fallback: Unable to remove feedback.' };
     }
+  }
+
+  async findByProductId(productId: string): Promise<FeedbackEntity[]> {
+    const feedbacks = await this.feedbackRepository.find({
+      where: { product: { id: productId } },
+    });
+    if (!feedbacks.length) {
+      throw new NotFoundException(
+        `No feedbacks found for product with ID ${productId}`,
+      );
+    }
+
+    return feedbacks;
   }
 }

@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { OrderDetailsService } from './order-details.service';
 import { CreateOrderDetailDto } from './dto/create-order-detail.dto';
@@ -23,6 +24,23 @@ export class OrderDetailsController {
   @Get()
   findAll() {
     return this.orderDetailsService.findAll();
+  }
+
+  @Get('/best-selling')
+  bestSelling() {
+    return this.orderDetailsService.getBestSellingProducts();
+  }
+  @Get('revenue-statistics')
+  async getRevenueStatistics(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+    @Query('groupBy') groupBy: 'day' | 'month' | 'year' = 'day',
+  ) {
+    return this.orderDetailsService.getRevenueStatistics(
+      startDate,
+      endDate,
+      groupBy,
+    );
   }
 
   @Get(':id')

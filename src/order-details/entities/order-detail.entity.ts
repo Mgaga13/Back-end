@@ -5,7 +5,9 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity('order_details')
 export class OrderDetailEntity extends BaseEntity {
-  @ManyToOne(() => OrderEntity, (order) => order.id, { onDelete: 'CASCADE' })
+  @ManyToOne(() => OrderEntity, (order) => order.orderDetails, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'order_id' })
   order: OrderEntity;
 
@@ -16,9 +18,9 @@ export class OrderDetailEntity extends BaseEntity {
   @JoinColumn({ name: 'product_id' })
   product: ProductEntity;
 
-  @Column()
-  price: number;
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
+  price: number; // Giá tại thời điểm đặt hàng
 
-  @Column()
+  @Column({ type: 'int' })
   quantity: number;
 }

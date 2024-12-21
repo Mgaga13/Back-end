@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -13,7 +14,7 @@ import { DataSource, Repository } from 'typeorm';
 import { PageUserDto } from './dto/page-user.dto';
 import { PageMetaDto } from 'src/commom/dto/pageMeta.dto';
 import { PageDto } from 'src/commom/dto/page.dto';
-
+const bcrypt = require('bcryptjs');
 @Injectable()
 export class UsersService {
   private userRepository: Repository<UserEntity>;
@@ -42,7 +43,6 @@ export class UsersService {
         'users.avatar',
         'users.phone',
       ]);
-    console.log(options);
     if (options.searchText) {
       queryBuilder.andWhere('users.email LIKE :searchText', {
         searchText: `%${options.searchText}%`, // Adding % for LIKE pattern matching
@@ -77,11 +77,15 @@ export class UsersService {
     });
   }
   async findOneById(id: string): Promise<UserEntity | null> {
-    return await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: {
         id: id,
       },
     });
+
+    delete user.password;
+    delete user.refreshToken;
+    return user;
   }
 
   async findOneByName(name: string) {
@@ -127,7 +131,58 @@ export class UsersService {
     });
   }
   async remove(id: string) {
-    const user = await this.findOneById(id);
     return this.userRepository.update(id, { isDeleted: true });
+  }
+
+  async resetTokenSendEmail(dataReset: {
+    user: any;
+    resetPasswordToken: string;
+    tokenCreatedAt: Date;
+  }) {
+    const updatedUser = {
+      ...dataReset.user,
+      resetPasswordToken: dataReset.resetPasswordToken,
+      tokenCreatedAt: dataReset.tokenCreatedAt,
+    };
+
+    return this.userRepository.save(updatedUser);
+  }
+  public async findOneByToken(token: string, newPassword): Promise<any> {
+    const user = await this.userRepository.findOne({
+      where: {
+        resetPasswordToken: token,
+        isDeleted: false,
+      },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Invalid link');
+    }
+    const timeToCheck = new Date(user.tokenCreatedAt);
+    const currentTime = new Date();
+    if (currentTime.getTime() > timeToCheck.getTime()) {
+      throw new BadRequestException('Token is expired');
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updatedUser = {
+      ...user,
+      password: hashedPassword,
+      resetPasswordToken: null,
+      tokenCreatedAt: null,
+    };
+    return this.userRepository.save(updatedUser);
+  }
+
+  async findUserById(id: string): Promise<UserEntity | null> {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: id,
+      },
+    });
+    return user;
+  }
+  async updatePassword(id: string, newPassword: string) {
+    return await this.userRepository.update(id, {
+      password: newPassword,
+    });
   }
 }

@@ -30,7 +30,6 @@ export class BrandsController {
   @Roles(UserRole.ADMIN)
   @UseGuards(RolesGuard)
   create(@Body() createBrandDto: CreateBrandDto) {
-    console.log(createBrandDto);
     return this.brandsService.create(createBrandDto);
   }
 

@@ -15,6 +15,7 @@ import { PageDto } from 'src/commom/dto/page.dto';
 import { PageMetaDto } from 'src/commom/dto/pageMeta.dto';
 import { CategoriesService } from 'src/categories/categories.service';
 import { BrandsService } from 'src/brands/brands.service';
+import { PageFilterProductDto } from './dto/page-product.filter.dto';
 @Injectable()
 export class ProductsService {
   constructor(
@@ -53,7 +54,6 @@ export class ProductsService {
   async findAllProducts(
     options: PageProductDto,
   ): Promise<PageDto<ProductEntity>> {
-    console.log(options);
     const skip = (options.page - 1) * options.limit;
     const queryBuilder = this.productRepository
       .createQueryBuilder('products')
@@ -81,6 +81,63 @@ export class ProductsService {
     return new PageDto<ProductEntity>(entities, pageMetaDto);
   }
 
+  async findAllProductsUser(
+    options: PageFilterProductDto,
+  ): Promise<PageDto<ProductEntity>> {
+    const skip = (options.page - 1) * options.limit;
+
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('products')
+      .where('products.isDeleted = :isDeleted', { isDeleted: false });
+
+    // Thêm điều kiện tìm kiếm theo categoryId
+    if (options.categoryId) {
+      queryBuilder.andWhere('products.category_id = :categoryId', {
+        categoryId: options.categoryId,
+      });
+    }
+
+    // Thêm điều kiện tìm kiếm theo brandId
+    if (options.brandId) {
+      queryBuilder.andWhere('products.brand_id = :brandId', {
+        brandId: options.brandId,
+      });
+    }
+
+    // Tìm kiếm theo searchText
+    if (options.searchText) {
+      queryBuilder.andWhere('products.name LIKE :searchText', {
+        searchText: `%${options.searchText}%`, // Adding % for LIKE pattern matching
+      });
+    }
+    if (options.sort === 'price') {
+      queryBuilder.orderBy(
+        'products.price',
+        options.sortPrice === 1 ? 'ASC' : 'DESC',
+      );
+    } else {
+      queryBuilder.orderBy(
+        `products.${options.sort}`,
+        options.sortPrice === 1 ? 'ASC' : 'DESC',
+      );
+    }
+
+    queryBuilder.skip(skip).take(options.limit);
+
+    const [entities, itemCount] = await queryBuilder
+      .getManyAndCount()
+      .catch((error: any) => {
+        throw new BadRequestException(error.message || 'Query failed');
+      });
+
+    const pageMetaDto = new PageMetaDto({
+      itemCount,
+      pageOptionsDto: options,
+    });
+
+    return new PageDto<ProductEntity>(entities, pageMetaDto);
+  }
+
   // Find all products
   async findAll(): Promise<{ success: boolean; result: ProductEntity[] }> {
     const products = await this.productRepository.find();
@@ -94,9 +151,9 @@ export class ProductsService {
   async findOne(id: string): Promise<any> {
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: ['brand', 'category'], // Liên kết với bảng 'brand' và 'category'
+      relations: ['brand', 'category', 'feedbacks'], // Liên kết với bảng 'brand' và 'category'
     });
-
+    console.log(product);
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
@@ -114,6 +171,7 @@ export class ProductsService {
       quantity: product.quantity,
       brand_id: product.brand?.id, // Lấy id của brand nếu có
       category_id: product.category?.id, // Lấy id của category nếu có
+      feedbacks: product.feedbacks,
     };
   }
 

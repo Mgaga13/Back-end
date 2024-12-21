@@ -6,17 +6,23 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { UpdateFeedbackDto } from './dto/update-feedback.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { Public } from 'src/auth/decorators/auth.decorator';
 
+@UseGuards(JwtAuthGuard)
 @Controller('v1/feedback')
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
+  @Public()
   @Post()
-  create(@Body() createFeedbackDto: CreateFeedbackDto) {
+  create(@Req() req, @Body() createFeedbackDto: CreateFeedbackDto) {
     return this.feedbackService.create(createFeedbackDto);
   }
 
@@ -24,10 +30,10 @@ export class FeedbackController {
   findAll() {
     return this.feedbackService.findAll();
   }
-
-  @Get(':id')
+  @Public()
+  @Get('feedbackByProduct/:id')
   findOne(@Param('id') id: string) {
-    return this.feedbackService.findOne(id);
+    return this.feedbackService.findByProductId(id);
   }
 
   @Patch(':id')

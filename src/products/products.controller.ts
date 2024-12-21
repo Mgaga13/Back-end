@@ -22,6 +22,7 @@ import {
   FilesInterceptor,
 } from '@nestjs/platform-express';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { PageFilterProductDto } from './dto/page-product.filter.dto';
 
 @Controller('v1/product')
 export class ProductsController {
@@ -41,7 +42,6 @@ export class ProductsController {
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() createProductDto: CreateProductDto,
   ) {
-    console.log(files);
     const uploadResults = await this.cloudinaryService.uploadMultipleFiles(
       'products',
       files,
@@ -63,6 +63,23 @@ export class ProductsController {
     ]);
     options.limit = options.limit > 100 ? 100 : options.limit;
     return this.productsService.findAllProducts(options);
+  }
+
+  @Post('/list')
+  @HttpCode(200)
+  findAllHome(@Body() pageOptionsDto: PageFilterProductDto) {
+    const options = pick(pageOptionsDto, [
+      'page',
+      'limit',
+      'sort',
+      'order',
+      'searchText',
+      'categoryId',
+      'brandId',
+      'sortPrice',
+    ]);
+    options.limit = options.limit > 100 ? 100 : options.limit;
+    return this.productsService.findAllProductsUser(options);
   }
 
   @Get(':id')
