@@ -69,6 +69,7 @@ export class UsersService {
     return new PageDto<UserEntity>(entities, pageMetaDto);
     // return await this.userRepository.find();
   }
+
   async findOneByEmail(email: string): Promise<UserEntity | null> {
     return await this.userRepository.findOne({
       where: {

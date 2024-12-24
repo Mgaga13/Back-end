@@ -22,13 +22,7 @@ export class BrannersService {
     const skip = (options.page - 1) * options.limit;
     const queryBuilder = this.bannerRepository.createQueryBuilder('banner');
 
-    queryBuilder.select([
-      'banner.id',
-      'banner.title',
-      'banner.image',
-      'banner.content',
-      'banner.isDeleted',
-    ]);
+    queryBuilder.select(['banner.id', 'banner.image', 'banner.isDeleted']);
     if (options.searchText) {
       queryBuilder.andWhere('banner.title LIKE :searchText', {
         searchText: `%${options.searchText}%`, // Adding % for LIKE pattern matching

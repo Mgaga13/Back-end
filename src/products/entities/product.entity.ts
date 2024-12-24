@@ -9,10 +9,10 @@ export class ProductEntity extends BaseEntity {
   @Column()
   name: string;
 
-  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'numeric', default: 0 })
   price: number;
 
-  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
+  @Column({ type: 'numeric', default: 0 })
   oldprice: number;
 
   @Column({ type: 'simple-array' })

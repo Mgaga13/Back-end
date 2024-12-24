@@ -19,7 +19,6 @@ import { TypeOrmModule } from './datasource/typeorm.module';
 import { AuthModule } from './auth/auth.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { BrannersModule } from './branners/branners.module';
-import { BannerDetailsModule } from './banner_details/banner_details.module';
 import { ExceptionsLoggerFilter } from './commom/utils/exceptionLogger.filter';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PaymentModule } from './payment/payment.module';
@@ -43,7 +42,6 @@ dotenv.config();
     AuthModule,
     FeedbackModule,
     BrannersModule,
-    BannerDetailsModule,
     ProductsModule,
     // ProductImagesModule,
     CategoriesModule,

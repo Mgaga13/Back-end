@@ -12,12 +12,6 @@ export class OrderEntity extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @Column({ type: 'smallint', default: 0 })
-  status: number; // 0: Pending, 1: Completed, 2: Canceled
-
-  @Column({ type: 'text', nullable: true })
-  note: string;
-
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0.0 })
   total: number;
 
@@ -30,8 +24,8 @@ export class OrderEntity extends BaseEntity {
   paymentStatus: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  paymentMethod: string; // Ví dụ: "ZaloPay", "PayPal", v.v.
+  paymentMethod: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  paymentReference: string; // Mã giao dịch thanh toán từ hệ thống thanh toán
+  paymentReference: string;
 }

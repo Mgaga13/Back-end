@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -14,6 +15,9 @@ import { CartEntity } from 'src/carts/entities/cart.entity';
 import { CartItemEntity } from 'src/cart_items/entities/cart_item.entity';
 import { PageOptionsReciptDto } from './dto/PageOptionsReciptDto.dto';
 import { ProductEntity } from 'src/products/entities/product.entity';
+import { PageOptionsDto } from 'src/commom/dto/pageOptions.dto';
+import { PageDto } from 'src/commom/dto/page.dto';
+import { PageMetaDto } from 'src/commom/dto/pageMeta.dto';
 
 @Injectable()
 export class OrdersService {
@@ -31,14 +35,9 @@ export class OrdersService {
   ) {}
 
   // Create a new order
-  async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
-    return await this.orderRepository.save(createOrderDto);
-  }
-
-  // Find all orders
-  async findAll(): Promise<OrderEntity[]> {
-    return await this.orderRepository.find({ relations: ['user'] });
-  }
+  // async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
+  //   return await this.orderRepository.save(createOrderDto);
+  // }
 
   // Find one order by ID
   async findOne(id: string): Promise<OrderEntity> {
@@ -48,15 +47,6 @@ export class OrdersService {
     });
     if (!order) throw new NotFoundException(`Order with ID ${id} not found`);
     return order;
-  }
-
-  // Update an order by ID
-  async update(
-    id: string,
-    updateOrderDto: UpdateOrderDto,
-  ): Promise<OrderEntity> {
-    await this.orderRepository.update(id, updateOrderDto);
-    return this.findOne(id);
   }
 
   // Remove an order by ID
@@ -113,7 +103,6 @@ export class OrdersService {
 
     const order = this.orderRepository.create({
       user: cart.user,
-      status: 0, // Pending
       paymentMethod: payment,
       paymentReference: paymentCode,
       total,
@@ -199,5 +188,78 @@ export class OrdersService {
     }
     const result = await queryBuilder.getRawMany();
     return result;
+  }
+
+  async findAll(options: PageOptionsDto): Promise<any> {
+    const skip = (options.page - 1) * options.limit;
+    const queryBuilder = this.orderRepository.createQueryBuilder('order');
+
+    queryBuilder
+      .leftJoinAndSelect('order.orderDetails', 'orderDetail')
+      .leftJoinAndSelect('orderDetail.product', 'product')
+      .where('order.isDeleted = :isDeleted', { isDeleted: false })
+      .select([
+        'order.id',
+        'order.total',
+        'order.paymentMethod',
+        'order.paymentStatus',
+        'order.createdAt',
+        'orderDetail', // Thêm trường createdAt vào SELECT
+      ])
+      .orderBy(`order.${options.sort}`, options.order) // Sắp xếp theo trường được chỉ định
+      .skip(skip)
+      .take(options.limit);
+
+    const { entities } = await queryBuilder
+      .getRawAndEntities()
+      .catch((error: any) => {
+        throw new BadRequestException(error);
+      });
+
+    const itemCount: number = await queryBuilder.getCount();
+
+    const pageMetaDto: PageMetaDto = new PageMetaDto({
+      itemCount,
+      pageOptionsDto: options,
+    });
+
+    return new PageDto<OrderEntity>(entities, pageMetaDto);
+  }
+
+  async findOrdersByUserId(
+    userId: number,
+    options: PageOptionsDto,
+  ): Promise<any> {
+    const skip = (options.page - 1) * options.limit;
+
+    const queryBuilder = this.orderRepository.createQueryBuilder('order');
+
+    queryBuilder
+      .leftJoinAndSelect('order.user', 'user') // Liên kết với bảng user
+      .leftJoinAndSelect('order.orderDetails', 'orderDetail')
+      .leftJoinAndSelect('orderDetail.product', 'product')
+      .where('order.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere('user.id = :userId', { userId }) // Điều kiện lọc theo user_id
+      .select([
+        'order.id',
+        'order.total',
+        'order.paymentMethod',
+        'order.paymentStatus',
+        'order.createdAt',
+        'orderDetail.id',
+        'product.name',
+      ])
+      .orderBy(`order.${options.sort}`, options.order)
+      .skip(skip)
+      .take(options.limit);
+
+    const [orders, itemCount] = await queryBuilder.getManyAndCount();
+
+    const pageMetaDto: PageMetaDto = new PageMetaDto({
+      itemCount,
+      pageOptionsDto: options,
+    });
+
+    return new PageDto<OrderEntity>(orders, pageMetaDto);
   }
 }

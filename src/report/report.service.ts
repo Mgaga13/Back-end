@@ -17,6 +17,7 @@ export class ReportService {
     private readonly orderDetailRepository: Repository<OrderDetailEntity>,
   ) {}
 
+  // Báo cáo số tổng số lượng sản phẩm được mua nhiều nhất
   async getTopSellingProducts(limit: number = 5) {
     const topProducts = await this.orderDetailRepository
       .createQueryBuilder('orderDetail')
@@ -25,19 +26,19 @@ export class ReportService {
       .addSelect('product.name', 'productName')
       .innerJoin('orderDetail.product', 'product')
       .groupBy('orderDetail.product_id, product.name')
-      .orderBy('SUM(orderDetail.quantity)', 'DESC') // Sử dụng biểu thức thay vì alias
+      .orderBy('SUM(orderDetail.quantity)', 'DESC')
       .limit(limit)
       .getRawMany();
 
     return topProducts;
   }
 
+  // Tổng doanh thu đơn hàng theo ngày
   async getStatistics({ startDate, endDate }: StatisticsDto) {
     const query = this.orderRepository
       .createQueryBuilder('order')
       .select('COUNT(order.id)', 'totalOrders')
       .addSelect('SUM(order.total)', 'totalRevenue')
-      .addSelect('order.status', 'status')
       .where('order.paymentStatus = true');
 
     if (startDate && endDate) {
@@ -55,11 +56,11 @@ export class ReportService {
       );
     }
     // query.where('order.paymentStatus = true ');
-    query.groupBy('order.status');
 
     return query.getRawMany();
   }
 
+  // Doanh thu tháng
   async getMonthlyStatistics({ startYear, endYear }: StatisticsDtoMoth) {
     const query = this.orderRepository
       .createQueryBuilder('order')

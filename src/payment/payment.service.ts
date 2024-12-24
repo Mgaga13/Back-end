@@ -18,7 +18,12 @@ export class PaymentService {
     key2: 'kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz',
     endpoint: 'https://sb-openapi.zalopay.vn/v2/create',
   };
-
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+    }).format(value);
+  }
   async createPayment(userId: string, createPaymentDto: CreatePaymentDto) {
     const { amount, cartItem } = createPaymentDto;
 
@@ -37,7 +42,7 @@ export class PaymentService {
       app_time: Date.now(),
       item: JSON.stringify(items),
       embed_data: JSON.stringify(embed_data),
-      amount: total,
+      amount: total * 1000,
       callback_url: 'http://localhost:3337/api/v1/payment/callback',
       description: `Payment for the order #${transID}`,
       bank_code: '',
