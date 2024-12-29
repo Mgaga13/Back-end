@@ -219,8 +219,8 @@ export class OrdersService {
     userId: number,
     options: PageOptionsDto,
   ): Promise<any> {
+    console.log('nhay vao day');
     const skip = (options.page - 1) * options.limit;
-
     const queryBuilder = this.orderRepository.createQueryBuilder('order');
 
     queryBuilder
@@ -228,6 +228,7 @@ export class OrdersService {
       .leftJoinAndSelect('order.orderDetails', 'orderDetail')
       .leftJoinAndSelect('orderDetail.product', 'product')
       .where('order.isDeleted = :isDeleted', { isDeleted: false })
+      .where('order.paymentStatus = :status', { status: true })
       .andWhere('user.id = :userId', { userId }) // Điều kiện lọc theo user_id
       .select([
         'order.id',
@@ -237,6 +238,8 @@ export class OrdersService {
         'order.createdAt',
         'orderDetail.id',
         'orderDetail.status',
+        'orderDetail.price',
+        'product.id',
         'product.name',
       ])
       .orderBy(`order.${options.sort}`, options.order)

@@ -20,9 +20,11 @@ import { Public } from 'src/auth/decorators/auth.decorator';
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
-  @Public()
   @Post()
   create(@Req() req, @Body() createFeedbackDto: CreateFeedbackDto) {
+    const user = req['user'];
+    console.log(req);
+    createFeedbackDto.userId = user.id;
     return this.feedbackService.create(createFeedbackDto);
   }
 
