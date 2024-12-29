@@ -32,10 +32,6 @@ export class ReportController {
     };
     return;
   }
-  @Get('month')
-  async getStatisticsMonth(@Query() statisticsDto: StatisticsDtoMoth) {
-    return this.orderStatisticsService.getMonthlyStatistics(statisticsDto);
-  }
   @Get('top-selling-products')
   async getTopSellingProducts(@Query('limit') limit: number) {
     const maxLimit = limit && limit > 0 ? limit : 5; // Mặc định lấy 5 sản phẩm

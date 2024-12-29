@@ -82,6 +82,11 @@ export class ProductsController {
     return this.productsService.findAllProductsUser(options);
   }
 
+  @Get('top-selling')
+  async getTopSellingProducts(@Query('limit') limit = 10) {
+    return this.productsService.getTopSellingProducts(limit);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);

@@ -17,7 +17,11 @@ export class ReportService {
     private readonly orderDetailRepository: Repository<OrderDetailEntity>,
   ) {}
 
-  // Báo cáo số tổng số lượng sản phẩm được mua nhiều nhất
+  /**
+   * Tổng số sản phẩm được mua nhiều nhất
+   * @param limit
+   * @returns
+   */
   async getTopSellingProducts(limit: number = 5) {
     const topProducts = await this.orderDetailRepository
       .createQueryBuilder('orderDetail')
@@ -33,7 +37,11 @@ export class ReportService {
     return topProducts;
   }
 
-  // Tổng doanh thu đơn hàng theo ngày
+  /**
+   * description Lấy thông tin thống kê: tổng số đơn, tổng doanh thu
+   * @param param0
+   * @returns
+   */
   async getStatistics({ startDate, endDate }: StatisticsDto) {
     const query = this.orderRepository
       .createQueryBuilder('order')
@@ -55,61 +63,6 @@ export class ReportService {
         'At least one parameter (startDate or endDate) must be provided.',
       );
     }
-    // query.where('order.paymentStatus = true ');
-
     return query.getRawMany();
-  }
-
-  // Doanh thu tháng
-  async getMonthlyStatistics({ startYear, endYear }: StatisticsDtoMoth) {
-    const query = this.orderRepository
-      .createQueryBuilder('order')
-      .select("TO_CHAR(order.createdAt, 'Month')", 'month')
-      .addSelect('EXTRACT(MONTH FROM order.createdAt)', 'monthNumber')
-      .addSelect('SUM(order.total)', 'totalRevenue')
-      .andWhere('EXTRACT(YEAR FROM order.createdAt) = :startYear', {
-        startYear,
-      }) // Lọc theo năm
-      .groupBy(
-        "TO_CHAR(order.createdAt, 'Month'), EXTRACT(MONTH FROM order.createdAt)",
-      )
-      .orderBy('EXTRACT(MONTH FROM order.createdAt)', 'ASC');
-
-    const rawData = await query.getRawMany();
-
-    // Xử lý dữ liệu để đảm bảo định dạng phù hợp
-    const monthlyData = Array(12).fill(0);
-    rawData.forEach((item) => {
-      const monthIndex = Number(item.monthNumber) - 1;
-      if (monthIndex >= 0 && monthIndex < 12) {
-        monthlyData[monthIndex] = parseFloat(item.totalRevenue);
-      }
-    });
-
-    return {
-      labels: [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-      ], // Tên tháng
-      datasets: [
-        {
-          label: 'Revenue ($)',
-          data: monthlyData, // Doanh thu tương ứng từng tháng
-          backgroundColor: 'rgba(255, 99, 132, 0.6)',
-          borderColor: 'rgba(255, 99, 132, 1)',
-          borderWidth: 1,
-        },
-      ],
-    };
   }
 }

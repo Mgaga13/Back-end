@@ -24,6 +24,12 @@ export class UserEntity extends BaseEntity {
   role: UserRole;
 
   @Column('varchar', { nullable: true })
+  gender: string; // Giới tính: 'Male', 'Female', hoặc bất kỳ định dạng nào bạn muốn
+
+  @Column('date', { nullable: true })
+  dob: Date; // Ngày sinh
+
+  @Column('varchar', { nullable: true })
   avatar: string;
 
   @Column('varchar', { nullable: true })
@@ -46,6 +52,7 @@ export class UserEntity extends BaseEntity {
 
   @Column({ nullable: true })
   tokenCreatedAt: Date;
+
   @OneToMany(() => FeedbackEntity, (feedback) => feedback.user, {
     cascade: true,
   })

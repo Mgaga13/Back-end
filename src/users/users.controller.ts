@@ -53,10 +53,14 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateUserDto: UpdateUserDto,
   ) {
+    console.log('nhay vao day', file);
     const uploadResults = await this.cloudinaryService.uploadToCloudinary(
       'avatar',
       file,
     );
+    if (uploadResults) {
+      updateUserDto.avatar = uploadResults.url;
+    }
     updateUserDto.avatar = uploadResults.url;
     return this.usersService.update(updateUserDto);
   }
@@ -69,12 +73,16 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateUserDto: UpdateUserDto,
   ) {
+    console.log(updateUserDto);
     const user = req['user'];
-    const uploadResults = await this.cloudinaryService.uploadToCloudinary(
-      'avatar',
-      file,
-    );
-    updateUserDto.avatar = uploadResults.url;
+    let uploadResults = null;
+    if (file) {
+      uploadResults = await this.cloudinaryService.uploadToCloudinary(
+        'avatar',
+        file,
+      );
+      updateUserDto.avatar = uploadResults.url;
+    }
     updateUserDto.id = user.id;
     return this.usersService.update(updateUserDto);
   }

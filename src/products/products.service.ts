@@ -184,7 +184,7 @@ export class ProductsService {
 
   // Update a product by ID
   async update(updateProductDto: UpdateProductDto): Promise<ProductEntity> {
-    const { brand_id, category_id, id, image, ...productData } =
+    const { brand_id, category_id, id, image, specification, ...productData } =
       updateProductDto;
 
     // Tìm sản phẩm hiện tại
@@ -196,7 +196,10 @@ export class ProductsService {
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
-
+    // Update specification only if provided
+    if (specification !== undefined) {
+      product.specification = specification;
+    }
     // Cập nhật các trường khác
     Object.assign(product, productData);
     if (image && image.length > 0) {
@@ -220,5 +223,11 @@ export class ProductsService {
     // Set isDeleted to true instead of deleting the record
     product.isDeleted = true;
     await this.productRepository.save(product);
+  }
+  async getTopSellingProducts(limit: number) {
+    return await this.productRepository.find({
+      order: { buyturn: 'DESC' },
+      take: limit,
+    });
   }
 }

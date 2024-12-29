@@ -18,7 +18,7 @@ export class OrderDetailEntity extends BaseEntity {
   @JoinColumn({ name: 'product_id' })
   product: ProductEntity;
 
-  @Column({ type: 'numeric', default: 0 })
+  @Column({ type: 'bigint', default: 0 })
   price: number; // Giá tại thời điểm đặt hàng
 
   @Column({ type: 'int' })

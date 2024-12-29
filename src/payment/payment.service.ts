@@ -35,6 +35,7 @@ export class PaymentService {
     const embed_data = {
       redirecturl: `http://localhost:3337/api/v1/payment/check-order`,
     };
+    console.log('total', total);
     const order = {
       app_id: this.config.app_id,
       app_trans_id: app_trans_id,
@@ -42,7 +43,7 @@ export class PaymentService {
       app_time: Date.now(),
       item: JSON.stringify(items),
       embed_data: JSON.stringify(embed_data),
-      amount: total * 1000,
+      amount: total,
       callback_url: 'http://localhost:3337/api/v1/payment/callback',
       description: `Payment for the order #${transID}`,
       bank_code: '',

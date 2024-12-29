@@ -148,7 +148,7 @@ export class OrdersService {
     const order_details_product = order.orderDetails.map(
       (val) => val.product.id,
     ); // Lấy id sản phẩm trong đơn hàng
-    console.log(order_details_product);
+
     order_details_product.map(async (val: any) => {
       await this.cartItemRepository
         .createQueryBuilder()
@@ -169,27 +169,11 @@ export class OrdersService {
     }
     return await this.orderRepository.update(order.id, { paymentStatus: true });
   }
-
-  async getTotalOrder(options: PageOptionsReciptDto): Promise<any> {
-    const queryBuilder = await this.orderRepository
-      .createQueryBuilder('order')
-      .leftJoinAndSelect('order.user', 'users')
-      .select('SUM(order.price) as Price')
-      .where('order.isDeleted = :isDeleted', { isDeleted: false });
-    if (options.startDate) {
-      queryBuilder.andWhere('order.createdAt >= :startDate', {
-        startDate: options.startDate,
-      });
-    }
-    if (options.endDate) {
-      queryBuilder.andWhere('order.createdAt < :endDate', {
-        endDate: options.endDate,
-      });
-    }
-    const result = await queryBuilder.getRawMany();
-    return result;
-  }
-
+  /**
+   * description: Lấy danh sách đơn hàng
+   * @param options
+   * @returns
+   */
   async findAll(options: PageOptionsDto): Promise<any> {
     const skip = (options.page - 1) * options.limit;
     const queryBuilder = this.orderRepository.createQueryBuilder('order');
@@ -225,7 +209,12 @@ export class OrdersService {
 
     return new PageDto<OrderEntity>(entities, pageMetaDto);
   }
-
+  /**
+   * description: Lấy danh sách đơn hàng theo user_id
+   * @param userId
+   * @param options
+   * @returns
+   */
   async findOrdersByUserId(
     userId: number,
     options: PageOptionsDto,
@@ -247,6 +236,7 @@ export class OrdersService {
         'order.paymentStatus',
         'order.createdAt',
         'orderDetail.id',
+        'orderDetail.status',
         'product.name',
       ])
       .orderBy(`order.${options.sort}`, options.order)
@@ -261,5 +251,49 @@ export class OrdersService {
     });
 
     return new PageDto<OrderEntity>(orders, pageMetaDto);
+  }
+  /**
+   * description: Cập nhật trạng thái đơn hàng
+   * @param orderId
+   * @param status
+   * @returns
+   */
+  async updateOrderStatus(orderId: string, status: number) {
+    const order = await this.orderDetailRepository.findOne({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.status = status;
+    return this.orderRepository.save(order);
+  }
+  /**
+   * description: Lấy danh sách chi tiết đơn hàng
+   * @param options
+   * @returns
+   */
+  async findOrdersDetail(options: PageOptionsDto): Promise<any> {
+    const skip = (options.page - 1) * options.limit;
+
+    const queryBuilder =
+      this.orderDetailRepository.createQueryBuilder('order_detail');
+
+    queryBuilder
+      .where('order_detail.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy(`order_detail.${options.sort}`, options.order)
+      .skip(skip)
+      .take(options.limit);
+
+    const [orders, itemCount] = await queryBuilder.getManyAndCount();
+
+    const pageMetaDto: PageMetaDto = new PageMetaDto({
+      itemCount,
+      pageOptionsDto: options,
+    });
+
+    return new PageDto<OrderDetailEntity>(orders, pageMetaDto);
   }
 }

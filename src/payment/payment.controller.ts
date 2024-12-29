@@ -30,7 +30,6 @@ export class PaymentController {
   async createPayment(@Req() req, @Body() createPaymentDto: CreatePaymentDto) {
     try {
       const user = req['user'];
-      console.log(user);
       const result = await this.paymentService.createPayment(
         user.id,
         createPaymentDto,

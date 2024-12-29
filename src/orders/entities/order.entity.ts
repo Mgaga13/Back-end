@@ -12,7 +12,7 @@ export class OrderEntity extends BaseEntity {
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0.0 })
+  @Column({ type: 'bigint', default: 0 })
   total: number;
 
   @OneToMany(() => OrderDetailEntity, (orderDetail) => orderDetail.order, {

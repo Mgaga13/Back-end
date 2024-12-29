@@ -7,11 +7,17 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { OrderDetailsService } from './order-details.service';
 import { CreateOrderDetailDto } from './dto/create-order-detail.dto';
 import { UpdateOrderDetailDto } from './dto/update-order-detail.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { Roles } from 'src/auth/decorators/roler.decorator';
+import { UserRole } from 'src/commom/utils/constants';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('v1/order-details')
 export class OrderDetailsController {
   constructor(private readonly orderDetailsService: OrderDetailsService) {}
@@ -25,11 +31,15 @@ export class OrderDetailsController {
   findAll() {
     return this.orderDetailsService.findAll();
   }
-
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Get('/best-selling')
   bestSelling() {
     return this.orderDetailsService.getBestSellingProducts();
   }
+
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
   @Get('revenue-statistics')
   async getRevenueStatistics(
     @Query('startDate') startDate: string,

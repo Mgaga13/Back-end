@@ -37,7 +37,7 @@ export class CreateProductDto {
   @IsString()
   description: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   specification: Record<string, any>;
 
   @IsOptional()
