@@ -76,4 +76,57 @@ export class ReportService {
     }
     return query.getRawMany();
   }
+
+  // Doanh thu tháng
+  async getMonthlyStatistics({ startYear, endYear }: StatisticsDtoMoth) {
+    const query = this.orderRepository
+      .createQueryBuilder('order')
+      .select("TO_CHAR(order.createdAt, 'Month')", 'month')
+      .addSelect('EXTRACT(MONTH FROM order.createdAt)', 'monthNumber')
+      .addSelect('SUM(order.total)', 'totalRevenue')
+      .andWhere('EXTRACT(YEAR FROM order.createdAt) = :startYear', {
+        startYear,
+      }) // Lọc theo năm
+      .groupBy(
+        "TO_CHAR(order.createdAt, 'Month'), EXTRACT(MONTH FROM order.createdAt)",
+      )
+      .orderBy('EXTRACT(MONTH FROM order.createdAt)', 'ASC');
+
+    const rawData = await query.getRawMany();
+
+    // Xử lý dữ liệu để đảm bảo định dạng phù hợp
+    const monthlyData = Array(12).fill(0);
+    rawData.forEach((item) => {
+      const monthIndex = Number(item.monthNumber) - 1;
+      if (monthIndex >= 0 && monthIndex < 12) {
+        monthlyData[monthIndex] = parseFloat(item.totalRevenue);
+      }
+    });
+
+    return {
+      labels: [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ], // Tên tháng
+      datasets: [
+        {
+          label: 'Revenue ($)',
+          data: monthlyData, // Doanh thu tương ứng từng tháng
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,
+        },
+      ],
+    };
+  }
 }

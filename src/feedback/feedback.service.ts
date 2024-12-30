@@ -98,12 +98,6 @@ export class FeedbackService {
     const feedbacks = await this.feedbackRepository.find({
       where: { product: { id: productId } },
     });
-    if (!feedbacks.length) {
-      throw new NotFoundException(
-        `No feedbacks found for product with ID ${productId}`,
-      );
-    }
-
     return feedbacks;
   }
 }

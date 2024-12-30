@@ -29,6 +29,7 @@ export class BrannersService {
       });
     }
     queryBuilder
+      .andWhere('banner.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy(`banner.${options.sort}`, options.order)
       .skip(skip)
       .take(options.limit)

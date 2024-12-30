@@ -40,11 +40,14 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() createUserDto: CreateUserDto,
   ) {
-    const uploadResults = await this.cloudinaryService.uploadToCloudinary(
-      'products',
-      file,
-    );
-    createUserDto.avatar = uploadResults.url;
+    let uploadResults = null;
+    if (file) {
+      uploadResults = await this.cloudinaryService.uploadToCloudinary(
+        'avatar',
+        file,
+      );
+      createUserDto.avatar = uploadResults.url;
+    }
     return this.usersService.create(createUserDto);
   }
   @UseInterceptors(FileInterceptor('avatar'))
@@ -53,16 +56,17 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const uploadResults = await this.cloudinaryService.uploadToCloudinary(
-      'avatar',
-      file,
-    );
-    if (uploadResults) {
+    let uploadResults = null;
+    if (file) {
+      uploadResults = await this.cloudinaryService.uploadToCloudinary(
+        'avatar',
+        file,
+      );
       updateUserDto.avatar = uploadResults.url;
     }
-    updateUserDto.avatar = uploadResults.url;
     return this.usersService.update(updateUserDto);
   }
+
   @Roles(UserRole.USER)
   @UseGuards(RolesGuard)
   @UseInterceptors(FileInterceptor('avatar'))
@@ -72,6 +76,7 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateUserDto: UpdateUserDto,
   ) {
+    console.log('here');
     const user = req['user'];
     let uploadResults = null;
     if (file) {

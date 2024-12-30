@@ -30,7 +30,6 @@ export class ReportController {
       totalOrders: totalOrders || 0,
       totalRevenue: totalRevenue || 0,
     };
-    return;
   }
   @Get('top-selling-products')
   async getTopSellingProducts(
@@ -44,6 +43,10 @@ export class ReportController {
       startDate,
       endDate,
     );
+  }
+  @Get('month')
+  async getStatisticsMonth(@Query() statisticsDto: StatisticsDtoMoth) {
+    return this.orderStatisticsService.getMonthlyStatistics(statisticsDto);
   }
   // constructor(private readonly reportService: ReportService) {}
   // @Post()

@@ -118,17 +118,24 @@ export class ProductsService {
         searchText: `%${options.searchText}%`, // Adding % for LIKE pattern matching
       });
     }
-    if (options.sort === 'price') {
+    if (options.sortPrice) {
       queryBuilder.orderBy(
         'products.price',
         options.sortPrice === 1 ? 'ASC' : 'DESC',
       );
-    } else {
-      queryBuilder.orderBy(
-        `products.${options.sort}`,
-        options.sortPrice === 1 ? 'ASC' : 'DESC',
-      );
     }
+    // if (options.sort === 'price') {
+    //   console.log('sort price');
+    //   queryBuilder.orderBy(
+    //     'products.price',
+    //     options.sortPrice === 1 ? 'ASC' : 'DESC',
+    //   );
+    // } else {
+    //   queryBuilder.orderBy(
+    //     `products.${options.sort}`,
+    //     options.sortPrice === 1 ? 'ASC' : 'DESC',
+    //   );
+    // }
 
     queryBuilder.skip(skip).take(options.limit);
 

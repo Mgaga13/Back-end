@@ -18,7 +18,7 @@ export class ProductEntity extends BaseEntity {
   @Column({ type: 'simple-array' })
   image: string[];
 
-  @Column()
+  @Column({ nullable: true })
   description: string;
 
   @Column({ type: 'jsonb', nullable: true })
