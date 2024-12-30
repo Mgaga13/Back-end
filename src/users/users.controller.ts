@@ -53,7 +53,6 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    console.log('nhay vao day', file);
     const uploadResults = await this.cloudinaryService.uploadToCloudinary(
       'avatar',
       file,
@@ -73,7 +72,6 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    console.log(updateUserDto);
     const user = req['user'];
     let uploadResults = null;
     if (file) {

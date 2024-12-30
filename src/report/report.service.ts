@@ -22,8 +22,12 @@ export class ReportService {
    * @param limit
    * @returns
    */
-  async getTopSellingProducts(limit: number = 5) {
-    const topProducts = await this.orderDetailRepository
+  async getTopSellingProducts(
+    limit: number = 5,
+    startDate?: Date,
+    endDate?: Date,
+  ) {
+    const query = this.orderDetailRepository
       .createQueryBuilder('orderDetail')
       .select('orderDetail.product_id', 'productId')
       .addSelect('SUM(orderDetail.quantity)', 'totalQuantity')
@@ -31,9 +35,16 @@ export class ReportService {
       .innerJoin('orderDetail.product', 'product')
       .groupBy('orderDetail.product_id, product.name')
       .orderBy('SUM(orderDetail.quantity)', 'DESC')
-      .limit(limit)
-      .getRawMany();
+      .limit(limit);
+    // Thêm điều kiện ngày nếu có
+    if (startDate) {
+      query.andWhere('orderDetail.createdAt >= :startDate', { startDate });
+    }
+    if (endDate) {
+      query.andWhere('orderDetail.createdAt <= :endDate', { endDate });
+    }
 
+    const topProducts = await query.getRawMany();
     return topProducts;
   }
 

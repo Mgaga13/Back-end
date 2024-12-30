@@ -176,21 +176,24 @@ export class OrdersService {
    */
   async findAll(options: PageOptionsDto): Promise<any> {
     const skip = (options.page - 1) * options.limit;
-    const queryBuilder = this.orderRepository.createQueryBuilder('order');
+    const queryBuilder =
+      this.orderDetailRepository.createQueryBuilder('orderDetail');
 
     queryBuilder
-      .leftJoinAndSelect('order.orderDetails', 'orderDetail')
+      .leftJoinAndSelect('orderDetail.order', 'order')
+      .leftJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('orderDetail.product', 'product')
       .where('order.isDeleted = :isDeleted', { isDeleted: false })
       .select([
+        'orderDetail',
+        'product.name',
         'order.id',
-        'order.total',
-        'order.paymentMethod',
-        'order.paymentStatus',
-        'order.createdAt',
-        'orderDetail', // Thêm trường createdAt vào SELECT
+        // 'order.paymentMethod',
+        // 'order.paymentStatus',
+        // 'order.createdAt',
+        'user.name', // Lấy tên khách hàng từ bảng user
       ])
-      .orderBy(`order.${options.sort}`, options.order) // Sắp xếp theo trường được chỉ định
+      .orderBy(`orderDetail.${options.sort}`, options.order) // Sắp xếp theo trường được chỉ định
       .skip(skip)
       .take(options.limit);
 
@@ -207,8 +210,9 @@ export class OrdersService {
       pageOptionsDto: options,
     });
 
-    return new PageDto<OrderEntity>(entities, pageMetaDto);
+    return new PageDto<OrderDetailEntity>(entities, pageMetaDto);
   }
+
   /**
    * description: Lấy danh sách đơn hàng theo user_id
    * @param userId
@@ -219,7 +223,6 @@ export class OrdersService {
     userId: number,
     options: PageOptionsDto,
   ): Promise<any> {
-    console.log('nhay vao day');
     const skip = (options.page - 1) * options.limit;
     const queryBuilder = this.orderRepository.createQueryBuilder('order');
 
@@ -265,13 +268,11 @@ export class OrdersService {
     const order = await this.orderDetailRepository.findOne({
       where: { id: orderId },
     });
-
     if (!order) {
       throw new NotFoundException('Order not found');
     }
-
     order.status = status;
-    return this.orderRepository.save(order);
+    return this.orderDetailRepository.save(order);
   }
   /**
    * description: Lấy danh sách chi tiết đơn hàng

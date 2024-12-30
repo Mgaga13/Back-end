@@ -35,7 +35,6 @@ export class PaymentService {
     const embed_data = {
       redirecturl: `http://localhost:3337/api/v1/payment/check-order`,
     };
-    console.log('total', total);
     const order = {
       app_id: this.config.app_id,
       app_trans_id: app_trans_id,
@@ -74,8 +73,6 @@ export class PaymentService {
 
   checkcallBack(body: any) {
     let mac = CryptoJS.HmacSHA256(body.dataStr, this.config.key2).toString();
-    console.log(mac);
-    console.log(body);
     if (body.reqMac !== mac) {
       // callback không hợp lệ
       throw new HttpException(

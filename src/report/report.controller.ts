@@ -33,9 +33,17 @@ export class ReportController {
     return;
   }
   @Get('top-selling-products')
-  async getTopSellingProducts(@Query('limit') limit: number) {
+  async getTopSellingProducts(
+    @Query('limit') limit: number,
+    @Query('startDate') startDate: any,
+    @Query('endDate') endDate: any,
+  ) {
     const maxLimit = limit && limit > 0 ? limit : 5; // Mặc định lấy 5 sản phẩm
-    return this.orderStatisticsService.getTopSellingProducts(maxLimit);
+    return this.orderStatisticsService.getTopSellingProducts(
+      maxLimit,
+      startDate,
+      endDate,
+    );
   }
   // constructor(private readonly reportService: ReportService) {}
   // @Post()

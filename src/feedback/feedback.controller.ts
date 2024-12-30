@@ -23,7 +23,6 @@ export class FeedbackController {
   @Post()
   create(@Req() req, @Body() createFeedbackDto: CreateFeedbackDto) {
     const user = req['user'];
-    console.log(req);
     createFeedbackDto.userId = user.id;
     return this.feedbackService.create(createFeedbackDto);
   }

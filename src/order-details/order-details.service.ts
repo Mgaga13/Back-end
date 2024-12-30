@@ -96,7 +96,6 @@ export class OrderDetailsService {
     }
 
     queryBuilder.orderBy('date', 'DESC'); // Order by date descending
-    console.log(queryBuilder.getQuery());
     return await queryBuilder.getRawMany();
   }
 

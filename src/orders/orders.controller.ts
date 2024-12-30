@@ -28,13 +28,14 @@ export class OrdersController {
   //   // console.log(userId)
   //   return this.ordersService.createOrderFromCart(userId);
   // }
-  // @Post()
-  // update(@Req() req: string, @Body() body: { status: number }) {
-  //   const user = req['user'];
-  //   return this.ordersService.update(user.id, body.status);
-  // }
+  @Post()
+  update(@Body() body: { orderId: string; status: number }) {
+    return this.ordersService.updateOrderStatus(body.orderId, body.status);
+  }
   @Get()
   findAll(@Query() pageOptionsDto: PageOptionsDto) {
+    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    options.limit = options.limit > 100 ? 100 : options.limit;
     return this.ordersService.findAll(pageOptionsDto);
   }
 

@@ -42,15 +42,12 @@ export class AuthService {
   }
 
   async signUp(userDto: CreateUserDto) {
-    try {
-      const hashed_password = await this.hashPasswordUser(userDto.password);
-      return await this.userService.create({
-        ...userDto,
-        password: hashed_password,
-      });
-    } catch (err) {
-      return err;
-    }
+    const hashed_password = await this.hashPasswordUser(userDto.password);
+    console.log('hashed_password');
+    return await this.userService.create({
+      ...userDto,
+      password: hashed_password,
+    });
   }
 
   private async generateToken(payload: { id: string; email: string }) {

@@ -42,7 +42,6 @@ export class PaymentController {
   @Post('/callback')
   async CheckPayment(@Body() body: any) {
     try {
-      console.log(body);
       const result = await this.paymentService.checkcallBack(body);
       return result;
     } catch (error) {

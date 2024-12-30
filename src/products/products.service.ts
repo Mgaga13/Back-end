@@ -88,6 +88,14 @@ export class ProductsService {
 
     const queryBuilder = this.productRepository
       .createQueryBuilder('products')
+      .select([
+        'products.id',
+        'products.name',
+        'products.image',
+        'products.description',
+        'products.price',
+        'products.oldprice',
+      ])
       .where('products.isDeleted = :isDeleted', { isDeleted: false });
 
     // Thêm điều kiện tìm kiếm theo categoryId
@@ -153,7 +161,6 @@ export class ProductsService {
       where: { id },
       relations: ['brand', 'category', 'feedbacks'], // Liên kết với bảng 'brand' và 'category'
     });
-    console.log(product);
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
