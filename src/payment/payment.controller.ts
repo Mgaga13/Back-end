@@ -59,4 +59,57 @@ export class PaymentController {
       res.redirect('http://localhost:5173/payment/payment-failed');
     }
   }
+
+  @Roles(UserRole.USER)
+  @UseGuards(RolesGuard)
+  @Post('create-cod')
+  async createCODPayment(
+    @Req() req,
+    @Body() createPaymentDto: CreatePaymentDto,
+  ) {
+    try {
+      const user = req['user'];
+      const result = await this.paymentService.createCODPayment(
+        user.id,
+        createPaymentDto,
+      );
+      return result;
+    } catch (error) {
+      throw new Error(error.message || 'Không thể xử lý thanh toán COD');
+    }
+  }
+
+  @Roles(UserRole.USER)
+  @UseGuards(RolesGuard)
+  @Post('create-momo')
+  async createMoMoPayment(
+    @Req() req,
+    @Body() createPaymentDto: CreatePaymentDto,
+  ) {
+    try {
+      const user = req['user'];
+      const result = await this.paymentService.createMomoPayment(
+        user.id,
+        createPaymentDto,
+      );
+      return result;
+    } catch (error) {
+      throw new Error(error.message || 'Không thể xử lý thanh toán COD');
+    }
+  }
+
+  @Public()
+  @Get('/check-order-momo')
+  async checkMomoTransactionStatus(
+    @Res() res: Response,
+    @Query('orderId') orderId: string,
+  ) {
+    console.log('orderId', orderId);
+    const data = await this.paymentService.checkMomoTransactionStatus(orderId);
+    // if (data.success === true) {
+    //   res.redirect('http://localhost:5173/payment/payment-success');
+    // } else {
+    //   res.redirect('http://localhost:5173/payment/payment-failed');
+    // }
+  }
 }

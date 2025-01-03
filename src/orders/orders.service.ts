@@ -49,6 +49,15 @@ export class OrdersService {
     return order;
   }
 
+  async findOneCartItem(id: string): Promise<any> {
+    const orderItem = await this.cartItemRepository.findOne({
+      where: { id },
+      relations: ['product'],
+    });
+    if (!orderItem)
+      throw new NotFoundException(`Order with ID ${id} not found`);
+    return orderItem;
+  }
   // Remove an order by ID
   async remove(id: string): Promise<void> {
     const deleteResult = await this.orderRepository.delete(id);
@@ -169,6 +178,62 @@ export class OrdersService {
     }
     return await this.orderRepository.update(order.id, { paymentStatus: true });
   }
+
+  async updateCartForCOD(userId: string, cartItemIds: number[]) {
+    // Lấy thông tin giỏ hàng của người dùng
+    const userCart = await this.cartRepository
+      .createQueryBuilder('cart')
+      .leftJoinAndSelect('cart.cartItems', 'cartItem')
+      .leftJoinAndSelect('cartItem.product', 'product')
+      .where('cart.userId = :userId', { userId })
+      .andWhere('cartItem.id IN (:...cartItemIds)', { cartItemIds })
+      .getOne();
+
+    if (!userCart || !userCart.cartItems.length) {
+      throw new HttpException(
+        'Không tìm thấy sản phẩm trong giỏ hàng',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Cập nhật sản phẩm: trừ số lượng và tăng lượt mua
+    for (const cartItem of userCart.cartItems) {
+      const productId = cartItem.product.id;
+      const productQuantity = cartItem.product.quantity;
+      const cartItemQuantity = cartItem.quantity;
+
+      if (cartItemQuantity > productQuantity) {
+        throw new HttpException(
+          `Sản phẩm ${cartItem.product.name} không đủ số lượng để mua`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const updatedQuantity = productQuantity - cartItemQuantity;
+      const updatedBuyTurn = cartItem.product.buyturn + cartItemQuantity;
+
+      // Cập nhật thông tin sản phẩm
+      await this.productRepository.update(productId, {
+        quantity: updatedQuantity,
+        buyturn: updatedBuyTurn,
+      });
+    }
+
+    // Xóa các cartItem đã được thanh toán khỏi giỏ hàng
+    await this.cartItemRepository
+      .createQueryBuilder()
+      .delete()
+      .from(CartItemEntity)
+      .where('id IN (:...cartItemIds)', { cartItemIds })
+      .execute();
+
+    // Trả về thông báo thành công
+    return {
+      success: true,
+      message: 'Cập nhật giỏ hàng và sản phẩm thành công',
+    };
+  }
+
   /**
    * description: Lấy danh sách đơn hàng
    * @param options
@@ -183,7 +248,13 @@ export class OrdersService {
       .leftJoinAndSelect('orderDetail.order', 'order')
       .leftJoinAndSelect('order.user', 'user')
       .leftJoinAndSelect('orderDetail.product', 'product')
-      .where('order.isDeleted = :isDeleted', { isDeleted: false })
+      .where('order.isDeleted = :isDeleted', { isDeleted: false });
+    if (options.status !== 'all') {
+      queryBuilder.andWhere('orderDetail.status = :status', {
+        status: options.status,
+      });
+    }
+    queryBuilder
       .select([
         'orderDetail',
         'product.name',
@@ -231,8 +302,15 @@ export class OrdersService {
       .leftJoinAndSelect('order.orderDetails', 'orderDetail')
       .leftJoinAndSelect('orderDetail.product', 'product')
       .where('order.isDeleted = :isDeleted', { isDeleted: false })
-      .where('order.paymentStatus = :status', { status: true })
       .andWhere('user.id = :userId', { userId }) // Điều kiện lọc theo user_id
+      .andWhere(
+        '(order.paymentMethod = :zaloPay AND order.paymentStatus = :status) OR (order.paymentMethod = :cod)',
+        {
+          zaloPay: 'Zalo Pay',
+          status: true,
+          cod: 'COD',
+        },
+      )
       .select([
         'order.id',
         'order.total',
@@ -258,6 +336,7 @@ export class OrdersService {
 
     return new PageDto<OrderEntity>(orders, pageMetaDto);
   }
+
   /**
    * description: Cập nhật trạng thái đơn hàng
    * @param orderId

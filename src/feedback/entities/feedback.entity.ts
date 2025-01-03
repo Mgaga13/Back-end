@@ -16,7 +16,7 @@ export class FeedbackEntity extends BaseEntity {
     onDelete: 'SET NULL',
   })
   user: UserEntity;
-  @Column({ type: 'int' })
+  @Column({ default: 0, type: 'int' })
   // { type: 'number', check: 'star >= 1 AND star <= 5' }
   star: number;
 

@@ -76,7 +76,6 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    console.log('here');
     const user = req['user'];
     let uploadResults = null;
     if (file) {

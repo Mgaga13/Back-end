@@ -34,7 +34,13 @@ export class OrdersController {
   }
   @Get()
   findAll(@Query() pageOptionsDto: PageOptionsDto) {
-    const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
+    const options = pick(pageOptionsDto, [
+      'page',
+      'limit',
+      'sort',
+      'order',
+      'status',
+    ]);
     options.limit = options.limit > 100 ? 100 : options.limit;
     return this.ordersService.findAll(pageOptionsDto);
   }

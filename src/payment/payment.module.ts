@@ -6,8 +6,9 @@ import { VnpayModule } from 'nestjs-vnpay';
 import { ignoreLogger } from 'vnpay';
 import { OrdersModule } from 'src/orders/orders.module';
 import { OrdersService } from 'src/orders/orders.service';
+import { ProductsModule } from 'src/products/products.module';
 @Module({
-  imports: [OrdersModule],
+  imports: [OrdersModule, ProductsModule],
   controllers: [PaymentController],
   providers: [PaymentService],
 })

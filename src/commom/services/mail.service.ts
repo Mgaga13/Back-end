@@ -27,14 +27,14 @@ export class MailService {
     const mailOptions = {
       from: 'noreply@shop.site', // Email sender
       to: to, // Recipient's email address
-      subject: 'Change Password', // Email subject
+      subject: 'Đổi mật khẩu', // Email subject
       html: `
         <div style="font-family: Arial, sans-serif; font-size: 14px;">
-          <p>You have requested to reset your password. Please click the link below to proceed:</p>
+          <p>Bạn đã yêu cầu đặt lại mật khẩu của mình. Vui lòng nhấp vào liên kết bên dưới để tiếp tục:</p>
           <p>
-            <a href="${resetLink}" style="color: #5EBBFF; text-decoration: none;">Reset Password</a>
+            <a href="${resetLink}" style="color: #5EBBFF; text-decoration: none;">Đổi mật khẩu</a>
           </p>
-          <p>If you did not request this, please ignore this email.</p>
+          <p>Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này.</p>
         </div>
       `,
     };

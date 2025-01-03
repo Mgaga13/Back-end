@@ -16,6 +16,7 @@ import { PageMetaDto } from 'src/commom/dto/pageMeta.dto';
 import { CategoriesService } from 'src/categories/categories.service';
 import { BrandsService } from 'src/brands/brands.service';
 import { PageFilterProductDto } from './dto/page-product.filter.dto';
+import { FeedbackEntity } from 'src/feedback/entities/feedback.entity';
 @Injectable()
 export class ProductsService {
   constructor(
@@ -34,9 +35,7 @@ export class ProductsService {
     }
     if (typeof createProductDto.specification === 'string') {
       try {
-        createProductDto.specification = JSON.parse(
-          createProductDto.specification,
-        );
+        createProductDto.specification = createProductDto.specification;
       } catch (error) {
         throw new HttpException(
           'Invalid JSON format for specification',
@@ -81,76 +80,89 @@ export class ProductsService {
     return new PageDto<ProductEntity>(entities, pageMetaDto);
   }
 
-  async findAllProductsUser(
-    options: PageFilterProductDto,
-  ): Promise<PageDto<ProductEntity>> {
-    const skip = (options.page - 1) * options.limit;
+  async findAllProductsUser(options: PageFilterProductDto): Promise<any> {
+    try {
+      const skip = (options.page - 1) * options.limit;
 
-    const queryBuilder = this.productRepository
-      .createQueryBuilder('products')
-      .select([
-        'products.id',
-        'products.name',
-        'products.image',
-        'products.description',
-        'products.price',
-        'products.oldprice',
-      ])
-      .where('products.isDeleted = :isDeleted', { isDeleted: false });
+      const queryBuilder = this.productRepository
+        .createQueryBuilder('products')
+        .select([
+          'products.id',
+          'products.name',
+          'products.image',
+          'products.description',
+          'products.price',
+          'products.oldprice',
+        ])
+        .addSelect(
+          (subQuery) =>
+            subQuery
+              .select('AVG(feedbacks.star)', 'averageRating')
+              .from(FeedbackEntity, 'feedbacks')
+              .where('feedbacks.productId = products.id'),
+          'averageRating',
+        )
+        .where('products.isDeleted = :isDeleted', { isDeleted: false })
+        .andWhere('products.quantity > 0');
 
-    // Thêm điều kiện tìm kiếm theo categoryId
-    if (options.categoryId) {
-      queryBuilder.andWhere('products.category_id = :categoryId', {
-        categoryId: options.categoryId,
+      // Lọc theo categoryId
+      if (options.categoryId) {
+        queryBuilder.andWhere('products.category_id = :categoryId', {
+          categoryId: options.categoryId,
+        });
+      }
+
+      // Lọc theo brandId
+      if (options.brandId) {
+        queryBuilder.andWhere('products.brand_id = :brandId', {
+          brandId: options.brandId,
+        });
+      }
+
+      // Tìm kiếm theo tên sản phẩm
+      if (options.searchText) {
+        queryBuilder.andWhere('products.name LIKE :searchText', {
+          searchText: `%${options.searchText}%`,
+        });
+      }
+
+      // Sắp xếp theo giá
+      if (options.sortPrice) {
+        queryBuilder.orderBy(
+          'products.price',
+          options.sortPrice === 1 ? 'ASC' : 'DESC',
+        );
+      }
+
+      // Tổng số lượng sản phẩm
+      const totalItems = await queryBuilder.getCount();
+
+      queryBuilder.skip(skip).take(options.limit);
+
+      const rawEntities = await queryBuilder.getRawMany();
+
+      if (!Array.isArray(rawEntities)) {
+        throw new BadRequestException('Query did not return a valid array');
+      }
+
+      // Tính toán averageRating
+      const productsWithRatings = rawEntities.map((entity) => ({
+        ...entity,
+        averageRating: parseFloat(entity.averageRating) || 0,
+      }));
+
+      // Khởi tạo PageMetaDto
+      const pageMetaDto = new PageMetaDto({
+        itemCount: totalItems,
+        pageOptionsDto: options,
       });
+
+      // Trả về PageDto
+      return new PageDto<any>(productsWithRatings, pageMetaDto);
+    } catch (error) {
+      console.error('Error in findAllProductsUser:', error);
+      throw new BadRequestException(error.message || 'Query failed');
     }
-
-    // Thêm điều kiện tìm kiếm theo brandId
-    if (options.brandId) {
-      queryBuilder.andWhere('products.brand_id = :brandId', {
-        brandId: options.brandId,
-      });
-    }
-
-    // Tìm kiếm theo searchText
-    if (options.searchText) {
-      queryBuilder.andWhere('products.name LIKE :searchText', {
-        searchText: `%${options.searchText}%`, // Adding % for LIKE pattern matching
-      });
-    }
-    if (options.sortPrice) {
-      queryBuilder.orderBy(
-        'products.price',
-        options.sortPrice === 1 ? 'ASC' : 'DESC',
-      );
-    }
-    // if (options.sort === 'price') {
-    //   console.log('sort price');
-    //   queryBuilder.orderBy(
-    //     'products.price',
-    //     options.sortPrice === 1 ? 'ASC' : 'DESC',
-    //   );
-    // } else {
-    //   queryBuilder.orderBy(
-    //     `products.${options.sort}`,
-    //     options.sortPrice === 1 ? 'ASC' : 'DESC',
-    //   );
-    // }
-
-    queryBuilder.skip(skip).take(options.limit);
-
-    const [entities, itemCount] = await queryBuilder
-      .getManyAndCount()
-      .catch((error: any) => {
-        throw new BadRequestException(error.message || 'Query failed');
-      });
-
-    const pageMetaDto = new PageMetaDto({
-      itemCount,
-      pageOptionsDto: options,
-    });
-
-    return new PageDto<ProductEntity>(entities, pageMetaDto);
   }
 
   // Find all products
@@ -239,9 +251,40 @@ export class ProductsService {
     await this.productRepository.save(product);
   }
   async getTopSellingProducts(limit: number) {
-    return await this.productRepository.find({
-      order: { buyturn: 'DESC' },
-      take: limit,
+    const queryBuilder = this.productRepository.createQueryBuilder('products');
+
+    const products = await queryBuilder
+      .select([
+        'products.id',
+        'products.name',
+        'products.image',
+        'products.description',
+        'products.price',
+        'products.oldprice',
+      ])
+      .addSelect(
+        (subQuery) =>
+          subQuery
+            .select('COALESCE(AVG(feedbacks.star), 0)', 'averageRating') // Sử dụng COALESCE để xử lý null
+            .from(FeedbackEntity, 'feedbacks')
+            .where('feedbacks.productId = products.id'),
+        'averageRating',
+      )
+      .where('products.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere('products.quantity > 0')
+      .orderBy('products.buyturn', 'DESC')
+      .take(limit)
+      .getRawMany();
+
+    return products;
+  }
+
+  async findOneQualityProduct(id: string) {
+    const product = this.productRepository.findOne({
+      where: {
+        id,
+      },
     });
+    return product;
   }
 }

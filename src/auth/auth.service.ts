@@ -43,7 +43,6 @@ export class AuthService {
 
   async signUp(userDto: CreateUserDto) {
     const hashed_password = await this.hashPasswordUser(userDto.password);
-    console.log('hashed_password');
     return await this.userService.create({
       ...userDto,
       password: hashed_password,
