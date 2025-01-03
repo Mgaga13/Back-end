@@ -296,21 +296,20 @@ export class OrdersService {
   ): Promise<any> {
     const skip = (options.page - 1) * options.limit;
     const queryBuilder = this.orderRepository.createQueryBuilder('order');
-
     queryBuilder
-      .leftJoinAndSelect('order.user', 'user') // Liên kết với bảng user
-      .leftJoinAndSelect('order.orderDetails', 'orderDetail')
-      .leftJoinAndSelect('orderDetail.product', 'product')
-      .where('order.isDeleted = :isDeleted', { isDeleted: false })
-      .andWhere('user.id = :userId', { userId }) // Điều kiện lọc theo user_id
-      .andWhere(
-        '(order.paymentMethod = :zaloPay AND order.paymentStatus = :status) OR (order.paymentMethod = :cod)',
-        {
-          zaloPay: 'Zalo Pay',
-          status: true,
-          cod: 'COD',
-        },
-      )
+      .innerJoinAndSelect('order.user', 'user') // Đảm bảo chỉ liên kết khi có user khớp
+      .innerJoinAndSelect('order.orderDetails', 'orderDetail')
+      .innerJoinAndSelect('orderDetail.product', 'product')
+      .where('user.id = :userId', { userId }) // Điều kiện lọc theo user_id
+      .andWhere('order.isDeleted = :isDeleted', { isDeleted: false })
+      // .andWhere(
+      //   '(order.paymentMethod = :zaloPay AND order.paymentStatus = :status) OR (order.paymentMethod = :cod)',
+      //   {
+      //     zaloPay: 'VnPay',
+      //     status: true,
+      //     cod: 'COD',
+      //   },
+      // )
       .select([
         'order.id',
         'order.total',

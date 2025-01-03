@@ -29,6 +29,21 @@ export class UsersService {
     }
     return await this.userRepository.save(createUserDto);
   }
+  async createAdmin(createUserDto: CreateUserDto) {
+    const existingUser = await this.findOneByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
+    }
+    createUserDto.password = await this.hashPasswordUser(
+      createUserDto.password,
+    );
+    return await this.userRepository.save(createUserDto);
+  }
+
+  private async hashPasswordUser(password: string) {
+    const salt = bcrypt.genSaltSync(11);
+    return await bcrypt.hash(password, salt);
+  }
   async findAll(options: PageUserDto): Promise<any> {
     const skip = (options.page - 1) * options.limit;
     const queryBuilder = this.userRepository.createQueryBuilder('users');

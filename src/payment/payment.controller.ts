@@ -42,6 +42,7 @@ export class PaymentController {
   @Post('/callback')
   async CheckPayment(@Body() body: any) {
     try {
+      console.log(body);
       const result = await this.paymentService.checkcallBack(body);
       return result;
     } catch (error) {
@@ -97,19 +98,45 @@ export class PaymentController {
       throw new Error(error.message || 'Không thể xử lý thanh toán COD');
     }
   }
+  @Roles(UserRole.USER)
+  @UseGuards(RolesGuard)
+  @Post('create_payment_url')
+  async createPaymentUrl(
+    @Body() createPaymentDto: CreatePaymentDto,
+    @Req() req,
+    @Res() res: Response,
+  ) {
+    const user = req['user'];
+    const paymentUrl = await this.paymentService.createPaymentUrl(
+      user.id,
+      createPaymentDto,
+    );
+    res.json({ paymentUrl });
+  }
 
   @Public()
-  @Get('/check-order-momo')
-  async checkMomoTransactionStatus(
+  @Get('vnpay-check-order')
+  async logVnpayData(
+    @Query()
+    body: {
+      vnp_PayDate: string;
+      vnp_TransactionStatus: string;
+      vnp_TxnRef: string;
+      vnp_ResponseCode: string;
+    },
     @Res() res: Response,
-    @Query('orderId') orderId: string,
   ) {
-    console.log('orderId', orderId);
-    const data = await this.paymentService.checkMomoTransactionStatus(orderId);
-    // if (data.success === true) {
-    //   res.redirect('http://localhost:5173/payment/payment-success');
-    // } else {
-    //   res.redirect('http://localhost:5173/payment/payment-failed');
-    // }
+    const data: any = await this.paymentService.handlePaymentReturn(body);
+    if (data.success === true) {
+      res.redirect('http://localhost:5173/payment/payment-success');
+    } else {
+      res.redirect('http://localhost:5173/payment/payment-failed');
+    }
   }
+
+  // @Post('refund')
+  // async refund(@Body() body: { orderId: string; transDate: string; amount: number; transType: string; user: string }) {
+  //   const { orderId, transDate, amount, transType, user } = body;
+  //   return this.paymentService.refundTransaction({ orderId, transDate, amount, transType, user });
+  // }
 }

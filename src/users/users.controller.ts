@@ -48,7 +48,7 @@ export class UsersController {
       );
       createUserDto.avatar = uploadResults.url;
     }
-    return this.usersService.create(createUserDto);
+    return this.usersService.createAdmin(createUserDto);
   }
   @UseInterceptors(FileInterceptor('avatar'))
   @Post('/update')

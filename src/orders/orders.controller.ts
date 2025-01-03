@@ -48,6 +48,7 @@ export class OrdersController {
   @Get('user')
   findAllByUser(@Req() req, @Query() pageOptionsDto: PageOptionsDto) {
     const user = req['user'];
+    console.log(user);
     const options = pick(pageOptionsDto, ['page', 'limit', 'sort', 'order']);
     options.limit = options.limit > 100 ? 100 : options.limit;
     return this.ordersService.findOrdersByUserId(user.id, pageOptionsDto);

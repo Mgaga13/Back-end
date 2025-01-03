@@ -6,22 +6,27 @@ import { ProductCode, VerifyIpnCall, VnpLocale } from 'vnpay';
 import axios from 'axios';
 import { OrdersService } from 'src/orders/orders.service';
 import { ProductsService } from 'src/products/products.service';
+import { ConfigService } from '@nestjs/config';
 const qs = require('qs');
 const CryptoJS = require('crypto-js');
-const crypto = require('crypto');
+import * as crypto from 'crypto';
+
 const moment = require('moment');
 @Injectable()
 export class PaymentService {
   constructor(
+    private readonly configService: ConfigService,
     private readonly orderService: OrdersService,
     private readonly productService: ProductsService,
   ) {}
 
   private readonly config = {
-    app_id: '2553',
-    key1: 'PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL',
-    key2: 'kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz',
+    app_id: '2554',
+    key1: 'sdngKKJmqEMzvh5QQcdD2A9XBSKUNaYn',
+    key2: 'trMrHtvjo6myautxDUiAcYsVtaeQ8nhf',
     endpoint: 'https://sb-openapi.zalopay.vn/v2/create',
+    callback_url:
+      'https://qcgateway.zalopay.vn/openinapp?order=eyJ6cHRyYW5zdG9rZW4iOiJBQ01lX045MDZ1UEZhMlVENFRGMk9jQVEiLCJhcHBpZCI6MjU1NH0=/zalopay/callback',
   };
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('vi-VN', {
@@ -58,7 +63,7 @@ export class PaymentService {
       item: JSON.stringify(items),
       embed_data: JSON.stringify(embed_data),
       amount: total,
-      callback_url: 'http://localhost:3337/api/v1/payment/callback',
+      callback_url: this.config.callback_url,
       description: `Payment for the order #${transID}`,
       bank_code: '',
     };
@@ -223,7 +228,7 @@ export class PaymentService {
       orderGroupId,
       lang,
     } = this.momoConfig;
-    const { cartItem } = createPaymentDto;
+    const { amount, cartItem } = createPaymentDto;
 
     // Kiểm tra số lượng sản phẩm
     for (const item of cartItem) {
@@ -242,7 +247,7 @@ export class PaymentService {
 
     const { total, selectedCartItems } =
       await this.orderService.calculateOrderTotal(cartItem, userId);
-    const amount = total;
+    // const amount = total;
     var rawSignature =
       'accessKey=' +
       accessKey +
@@ -316,59 +321,108 @@ export class PaymentService {
     }
   }
 
-  async handleMomoCallback(body: any): Promise<any> {
-    const { signature, ...data } = body;
-    const rawSignature = `partnerCode=${data.partnerCode}&orderId=${data.orderId}&requestId=${data.requestId}&amount=${data.amount}&orderInfo=${data.orderInfo}&orderType=${data.orderType}&transId=${data.transId}&resultCode=${data.resultCode}&message=${data.message}&payType=${data.payType}&responseTime=${data.responseTime}&extraData=${data.extraData}`;
-    const expectedSignature = CryptoJS.HmacSHA256(
-      rawSignature,
-      this.momoConfig.secretKey,
-    ).toString();
+  async createPaymentUrl(
+    userId: string,
+    createPaymentDto: CreatePaymentDto,
+  ): Promise<string> {
+    const { amount, cartItem } = createPaymentDto;
+    const tmnCode = '7PT7MTSV';
+    const secretKey = 'UBN7JIAPD7BEHSYBEW37Y6I7QTS5FD9E';
+    const returnUrl = this.configService.get<string>('VNP_RETURN_URL');
+    console.log('hash key', secretKey);
 
-    if (signature !== expectedSignature) {
-      throw new HttpException('Invalid signature', HttpStatus.BAD_REQUEST);
-    }
+    const createDate = moment().format('YYYYMMDDHHmmss');
+    const expireDate = moment().add(15, 'minutes').format('YYYYMMDDHHmmss');
 
-    if (data.resultCode === 0) {
-      // Update order status to paid
-      return { success: true, message: 'Payment successful' };
-    } else {
-      return { success: false, message: 'Payment failed' };
+    for (const item of cartItem) {
+      const cart_items = await this.orderService.findOneCartItem(item);
+      if (cart_items.quantity > cart_items.product.quantity) {
+        throw new HttpException(
+          'Lỗi không đủ sản phẩm để mua hàng',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
     }
+    const { total, selectedCartItems } =
+      await this.orderService.calculateOrderTotal(cartItem, userId);
+    const orderId = Date.now().toString();
+    // if (bankCode) {
+    //   vnp_Params['vnp_BankCode'] = bankCode;
+    // }
+    const vnp_Params = {
+      vnp_Version: '2.1.0',
+      vnp_Command: 'pay',
+      vnp_TmnCode: tmnCode,
+      vnp_Locale: 'vn',
+      vnp_CurrCode: 'VND',
+      vnp_TxnRef: orderId,
+      vnp_OrderInfo: `Thanh toan cho ma GD: ${orderId}`,
+      vnp_OrderType: 'other',
+      vnp_Amount: total * 100,
+      vnp_ReturnUrl: 'http://localhost:3337/api/v1/payment/vnpay-check-order',
+      vnp_IpAddr: '127.0.0.1',
+      vnp_CreateDate: createDate,
+    };
+    const redirectUrl = new URL(
+      'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+    );
+
+    Object.entries(vnp_Params)
+      .sort(([key1], [key2]) => key1.localeCompare(key2))
+      .forEach(([key, value]) => {
+        // Skip empty value
+        if (!value || value === '' || value === undefined || value === null) {
+          return;
+        }
+        redirectUrl.searchParams.append(key, value.toString());
+      });
+
+    const hmac = crypto.createHmac('sha512', secretKey);
+    const signed = hmac
+      .update(Buffer.from(redirectUrl.searchParams.toString(), 'utf-8'))
+      .digest('hex');
+    redirectUrl.searchParams.append('vnp_SecureHash', signed);
+    if (redirectUrl.href) {
+      await this.orderService.createOrderFromCart(
+        total,
+        selectedCartItems,
+        userId,
+        'VnPay',
+        orderId,
+      );
+    }
+    return redirectUrl.href;
   }
 
-  async checkMomoTransactionStatus(orderId: string): Promise<any> {
-    const { accessKey, partnerCode, secretKey } = this.momoConfig;
-    const requestId = orderId;
+  async handlePaymentReturn(vnpayData: {
+    vnp_PayDate: string;
+    vnp_TransactionStatus: string;
+    vnp_TxnRef: string;
+    vnp_ResponseCode: string;
+  }) {
+    const { vnp_PayDate, vnp_TransactionStatus, vnp_TxnRef, vnp_ResponseCode } =
+      vnpayData;
+    // console.log('Processing payment return...');
+    // console.log('vnp_PayDate:', vnp_PayDate);
+    // console.log('vnp_TransactionStatus:', vnp_TransactionStatus);
+    // console.log('vnp_TransactionNo:', vnp_TxnRef);
+    // console.log('vnp_ResponseCode:', vnp_ResponseCode);
 
-    const rawSignature = `accessKey=${accessKey}&orderId=${orderId}&partnerCode=${partnerCode}&requestId=${requestId}`;
-    const signature = crypto
-      .createHmac('sha256', secretKey)
-      .update(rawSignature)
-      .digest('hex');
-
-    const requestBody = JSON.stringify({
-      partnerCode: 'MOMO',
-      requestId: orderId,
-      orderId: orderId,
-      signature: signature,
-      lang: 'vi',
-    });
-
-    try {
-      const response = await axios.post(
-        'https://test-payment.momo.vn/v2/gateway/api/query',
-        requestBody,
-        {
-          headers: { 'Content-Type': 'application/json' },
-        },
-      );
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      throw new HttpException(
-        error.response?.data || 'Failed to check transaction status',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    if (vnp_ResponseCode === '00' && vnp_TransactionStatus === '00') {
+      const order = await this.orderService.checkOrder(vnp_TxnRef);
+      if (order.affected == 1) {
+        return {
+          success: true,
+          message: 'Thanh toán thành công',
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Thanh toán thất bại',
+        };
+      }
+    } else {
+      throw new Error('Payment failed or was not successful.');
     }
   }
 }
